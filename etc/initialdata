@@ -1,9 +1,10 @@
-@CustomFeilds = (
+@CustomFields = (
     {
-        Name        => '_RTIR_SLA',
+        Name        => 'SLA',
+        Queue       => 0,
         Type        => 'SelectSingle',
         Disabled    => 0,
-        Description => 'SLA for Incident Reports RTIR queue',
+        Description => 'Service Level Agreement',
         Values      => [
             { Name => 'Full service',               SortOrder => 1 },
             { Name => 'Full service: out of hours', SortOrder => 2 },
@@ -13,17 +14,25 @@
 );
 
 @ScripConditions = (
-    {  Name        => '[SLA] Require Default', # loc
+    {  Name        => '[SLA] Require default', # loc
        Description => 'Detect a situation when we should set default service level' , # loc
        ApplicableTransTypes => 'Create',
-       ExecModule => 'SLA::RequireDefault',
+       ExecModule => 'SLA_RequireDefault',
     },
 
 );
 
 @ScripActions = (
-    {  Name        => '[SLA] Set service level', # loc
+    {  Name        => '[SLA] Set default service level', # loc
        Description => 'Set the due date to the current time' , # loc
-       ExecModule => 'SLA::SetDefault',
+       ExecModule => 'SLA_SetDefault',
     },
 );
+
+@Scrips = (
+    {  Description       => "[SLA] Set default service level if needed",
+       ScripCondition    => '[SLA] Require Default',
+       ScripAction       => '[SLA] Set service level',
+       Template          => 'Blank' },
+);
+

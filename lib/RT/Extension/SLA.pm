@@ -60,7 +60,7 @@ sub BusinessHours {
     return new Business::Hours;
 }
 
-=head2 Aggreements [ Type => 'Response' ]
+=head2 Agreements [ Type => 'Response' ]
 
 Returns an instance of L<Business::SLA> class filled with
 service levels for particular Type.
@@ -73,7 +73,7 @@ we support.
 
 =cut
 
-sub Aggreements {
+sub Agreements {
     my $self = shift;
     my %args = ( Type => 'Response', @_ );
 
@@ -89,7 +89,7 @@ sub Aggreements {
     foreach my $level ( keys %$levels ) {
         my $description = $levels->{ $level }{ $args{'Type'} };
         unless ( defined $description ) {
-            $RT::Logger->warn("No $args{'Type'} agreement for $level");
+            $RT::Logger->warning("No $args{'Type'} agreement for $level");
             next;
         }
 
