@@ -105,4 +105,22 @@ sub Aggreements {
     return $SLA;
 }
 
+=head1 DESIGN
+
+=head2 Classes
+
+Actions are subclasses of RT::Action::SLA class that is subclass of
+RT::Extension::SLA and RT::Action::Generic classes.
+
+Conditions are subclasses of RT::Condition::SLA class that is subclass of
+RT::Extension::SLA and RT::Condition::Generic classes.
+
+RT::Extension::SLA is a base class for all classes in the extension,
+it provides access to config, generates B::Hours and B::SLA objects, and
+other things useful for whole extension. As this class is the base for
+all actions and conditions then we must avoid adding methods which overload
+methods in 'RT::{Condition,Action}::Generic' modules.
+
+=cut
+
 1;
