@@ -11,3 +11,19 @@
         ],
     },
 );
+
+@ScripConditions = (
+    {  Name        => '[SLA] Require Default', # loc
+       Description => 'Detect a situation when we should set default service level' , # loc
+       ApplicableTransTypes => 'Create',
+       ExecModule => 'SLA::RequireDefault',
+    },
+
+);
+
+@ScripActions = (
+    {  Name        => '[SLA] Set service level', # loc
+       Description => 'Set the due date to the current time' , # loc
+       ExecModule => 'SLA::SetDefault',
+    },
+);

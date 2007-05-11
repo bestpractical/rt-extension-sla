@@ -2,13 +2,13 @@
 use strict;
 use warnings;
 
-package RT::Action::SLA::Set;
+package RT::Action::SLA::SetDefault;
 
 use base qw(RT::Action::SLA);
 
 =head1 NAME
 
-RT::Action::SLA::Set - set default SLA value
+RT::Action::SLA::SetDefault - set default SLA value
 
 =cut
 
