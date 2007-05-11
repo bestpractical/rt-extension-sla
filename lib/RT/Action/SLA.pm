@@ -4,8 +4,6 @@ use warnings;
 
 package RT::Action::SLA;
 
-sub SLA {
-
-}
+use base qw(RT::Extension::SLA RT::Action::Generic);
 
 1;
