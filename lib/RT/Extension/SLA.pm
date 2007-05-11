@@ -55,26 +55,41 @@ so we'll have something like:
 =cut
 
 sub BusinessHours {
+    my $self = shift;
     require Business::Hours;
     return new Business::Hours;
 }
 
-sub SLA {
+=head2 Aggreements [ Type => 'Response' ]
+
+Returns an instance of L<Business::SLA> class filled with
+service levels for particular Type.
+
+Now we take list of agreements and its description from the
+RT config.
+
+By default Type is 'Response'. 'Resolve' is another type
+we support.
+
+=cut
+
+sub Aggreements {
+    my $self = shift;
     my %args = ( Type => 'Response', @_ );
 
     my $class = $RT::SLA{'Module'} || 'Business::SLA';
     eval "require $class" or die $@;
     my $SLA = $class->new(
-        BusinessHours     => BusinessHours(),
+        BusinessHours     => $self->BusinessHours,
         InHoursDefault    => $RT::SLA{'InHoursDefault'},
         OutOfHoursDefault => $RT::SLA{'OutOfHoursDefault'},
     );
 
     my $levels = $RT::SLA{'Levels'};
     foreach my $level ( keys %$levels ) {
-        my $description = $levels->{ $level }{ $type };
+        my $description = $levels->{ $level }{ $args{'Type'} };
         unless ( defined $description ) {
-            $RT::Logger->warn("No $type agreement for $level");
+            $RT::Logger->warn("No $args{'Type'} agreement for $level");
             next;
         }
 
