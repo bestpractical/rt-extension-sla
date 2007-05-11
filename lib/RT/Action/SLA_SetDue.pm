@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-package RT::Action::SLA::SetDue;
+package RT::Action::SLA_SetDue;
 
 use base qw(RT::Action::SLA);
 

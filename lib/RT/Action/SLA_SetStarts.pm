@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package RT::Action::SLA::SetStarts;
+package RT::Action::SLA_SetStarts;
 
 use base qw(RT::Action::SLA);
 
