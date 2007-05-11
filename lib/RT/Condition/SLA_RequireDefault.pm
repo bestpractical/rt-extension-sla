@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-package RT::Condition::SLA::RequireDefault;
+package RT::Condition::SLA_RequireDefault;
 use base qw(RT::Condition::SLA);
 
 =head1 IsApplicable
