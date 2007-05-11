@@ -8,15 +8,13 @@ use base qw(RT::Action::SLA);
 
 =head1 NAME
 
-RT::Action::SLA::Set - set default SLA value if it's not set
+RT::Action::SLA::Set - set default SLA value
 
 =cut
 
 sub Prepare { return 1 }
 sub Commit {
     my $self = shift;
-
-    return 1 if $self->TicketObj->FirstCustomFieldValue('SLA');
 
     my $cf = RT::CustomField->new( $self->CurrentUser );
     $cf->LoadByNameAndQueue( Queue => $self->TicketObj->Queue, Name => 'SLA' );
@@ -25,19 +23,23 @@ sub Commit {
         return 1;
     }
 
-    my $SLAObj = $self->SLA;
-    my $sla = $SLAObj->SLA( $self->TransactionObj->CreatedObj->Unix );
-    unless ( $sla ) {
-        $RT::Logger->error("No default SLA for in hours or/and out of hours time");
-        return 0;
+    my $SLA = $self->Agreements;
+    my $level = $SLA->SLA( $self->TransactionObj->CreatedObj->Unix );
+    unless ( $level ) {
+        if ( $SLA->IsInHours( $self->TransactionObj->CreatedObj->Unix ) ) {
+            $RT::Logger->debug("No default service level for in hours time");
+        } else {
+            $RT::Logger->debug("No default service level for out of hours time");
+        }
+        return 1;
     }
 
     my ($status, $msg) = $self->TicketObj->AddCustomFieldValue(
         Field => $cf->id,
-        Value => $sla,
+        Value => $level,
     );
     unless ( $status ) {
-        $RT::Logger->error("Couldn't set SLA: $msg");
+        $RT::Logger->error("Couldn't set service level: $msg");
         return 0;
     }
 
