@@ -12,6 +12,7 @@ meta-spec:
 name: RT-Extension-SLA
 no_index: 
   directory: 
+    - etc
     - inc
     - t
 requires: 
