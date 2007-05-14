@@ -28,9 +28,7 @@ sub Prepare { return 1 }
 sub Commit {
     my $self = shift;
 
-    my $cf = RT::CustomField->new( $self->CurrentUser );
-    $cf->LoadByNameAndQueue( Queue => $self->TicketObj->Queue, Name => 'SLA' );
-    $cf->LoadByNameAndQueue( Name => 'SLA' ) unless $cf->id;
+    my $cf = $self->GetCustomField;
     unless ( $cf->id ) {
         $RT::Logger->warning("SLA scrip applied to a queue that has no SLA CF");
         return 1;
