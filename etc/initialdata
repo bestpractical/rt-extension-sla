@@ -40,7 +40,7 @@
 @Scrips = (
     {  Description       => "[SLA] Set default service level if needed",
        ScripCondition    => '[SLA] Require Default',
-       ScripAction       => '[SLA] Set service level',
+       ScripAction       => '[SLA] Set default service level',
        Template          => 'Blank' },
     {  Description       => "[SLA] Set starts date if needed",
        ScripCondition    => '[SLA] Require starts set',
