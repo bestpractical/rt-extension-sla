@@ -105,6 +105,18 @@ sub Agreements {
     return $SLA;
 }
 
+sub GetCustomField {
+    my $self = shift;
+    my %args = (Ticket => undef, CustomField => 'SLA', @_);
+    unless ( $args{'Ticket'} ) {
+        $args{'Ticket'} = $self->TicketObj if $self->can('TicketObj');
+    }
+    unless ( $args{'Ticket'} ) {
+        return RT::CustomField->new( $RT::SystemUser );
+    }
+    return $args{'Ticket'}->QueueObj->CustomField( $args{'CustomField'} );
+}
+
 =head1 DESIGN
 
 =head2 Classes
