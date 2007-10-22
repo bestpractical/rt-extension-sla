@@ -12,7 +12,7 @@ RT::Condition::SLA_RequireDueSet - checks if Due date require update
 =head1 DESCRIPTION
 
 Checks if Due date require update. This should be done when we create
-a ticket and it has service level value or when we set serveice level.
+a ticket and it has service level value or when we set service level.
 
 =cut
 
