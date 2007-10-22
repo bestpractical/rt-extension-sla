@@ -15,7 +15,7 @@ RT::Extension::SLA - Service Level Agreements
 * several agreement levels
 * options:
 ** InHoursDefault - default service level ticket created during business hours, but only if level hasn't been set
-** OutOfHoursDefault - default service level ticket created during business hours, but only if level hasn't been set
+** OutOfHoursDefault - default service level ticket created out of business hours, but only if level hasn't been set
 ** Levels - each level has definition of agreements for Response and Resolve
 *** If you set a requirement for response then we set due date on create or as soon as user replies to some a in the feature, so due date means deadline for reply, as soon as somebody who is not a requestor replies we unset due
 *** if you set a requirement for resolve then we set due date on create to a point in the feature, so due date defines deadline for ticket resolving
