@@ -33,22 +33,33 @@ Set the Due date accordingly to SLA.
 sub Commit {
     my $self = shift;
 
-    my $time   = $self->TransactionObj->CreatedObj->Unix;
-
-    my $due = $SLAObj->Due( $time, $SLAObj->SLA( $time ) );
-
-    my $current_due = $self->TicketObj->DueObj->Unix;
-
-    if ( $current_due && $current_due > 0 && $current_due < $due ) {
-        $RT::Logger->debug("Ticket #". $self->TicketObj->id ." has due earlier than by SLA");
+    my $level = $ticket->FirstCustomFieldValue('SLA');
+    unless ( $level ) {
+        $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined, skip setting Starts');
         return 1;
     }
 
+    my $due = $self->EarliestDue( $level );
+
     my $date = RT::Date->new( $RT::SystemUser );
     $date->Set( Format => 'unix', Value => $due );
-    $self->TicketObj->SetDue( $date->ISO );
+    my ($status, $msg) = $self->TicketObj->SetDue( $date->ISO );
+    unless ( $status ) {
+        $RT::Logger->error("Couldn't set due date: $msg");
+        return 0;
+    }
 
     return 1;
+}
+
+sub EarliestDue {
+    my $self = shift;
+    my $level = shift;
+
+    my $time = $self->TransactionObj->CreatedObj->Unix;
+    my $response_due = $self->Agreements( Type => 'Response' )->Due( $time, $level );
+    my $resolve_due  = $self->Agreements( Type => 'Resolve'  )->Due( $time, $level );
+    return $resolve_due < $response_due? $resolve_due : $response_due;
 }
 
 1;
