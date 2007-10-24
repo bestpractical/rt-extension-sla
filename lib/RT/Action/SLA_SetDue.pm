@@ -33,6 +33,8 @@ Set the Due date accordingly to SLA.
 sub Commit {
     my $self = shift;
 
+    my $ticket = $self->TicketObj;
+
     my $level = $ticket->FirstCustomFieldValue('SLA');
     unless ( $level ) {
         $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined, skip setting Starts');
