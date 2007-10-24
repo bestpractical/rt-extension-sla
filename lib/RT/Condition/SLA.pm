@@ -5,7 +5,7 @@ use warnings;
 package RT::Condition::SLA;
 use base qw(RT::Extension::SLA RT::Condition::Generic);
 
-=head1 IsSLAApplied
+=head1 SLAIsApplied
 
 =cut
 
@@ -28,7 +28,6 @@ sub IsCustomFieldChange {
         $RT::Logger->error("Couldn't load the '$cf_name' field");
         return 0;
     }
-
     return 0 unless $cf->id == $txn->Field;
     return 1;
 }
