@@ -105,6 +105,9 @@ sub Agreements {
             $RT::Logger->error("Levels of SLA should be either number or hash ref");
             next;
         }
+        if ( $meta->{'StartImmediately'} ) {
+            $props{'StartImmediately'} = $meta->{'StartImmediately'};
+        }
 
         if ( $out_of_hours and my $tmp = $meta->{ 'OutOfHours' }{ $args{'Type'} } ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
