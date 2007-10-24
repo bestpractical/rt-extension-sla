@@ -56,10 +56,16 @@ sub EarliestDue {
     my $self = shift;
     my $level = shift;
 
-    my $response_due = $self->Agreements( Type => 'Response' )
-        ->Due( $self->TransactionObj->CreatedObj->Unix, $level );
-    my $resolve_due  = $self->Agreements( Type => 'Resolve'  )
-        ->Due( $self->TicketObj->CreatedObj->Unix, $level );
+    my $response_time = $self->TransactionObj->CreatedObj->Unix;
+    my $response_due = $self->Agreements(
+        Type => 'Response', Time => $response_time
+    )->Due( $response_time, $level );
+
+    my $create_time = $self->TicketObj->CreatedObj->Unix;
+    my $resolve_due  = $self->Agreements(
+        Type => 'Resolve', Time => $create_time
+    )->Due( $create_time, $level );
+
     return $resolve_due < $response_due? $resolve_due : $response_due;
 }
 

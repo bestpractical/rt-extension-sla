@@ -25,13 +25,16 @@ RT::Extension::SLA - Service Level Agreements
 
 so we'll have something like:
 %SLA => (
-    InHoursDefault => 'one real hour for reply',
-    OutOfHoursDefault => 'two business hours for reply',
+    Default => 'two business hours for reply', 
     Levels => {
         'one real hour for reply' => { Response => { RealMinutes => 60 } },
         'two business hours for reply' => { Response => { BusinessMinutes => 60*2 } },
         '8 business hours for resolve' => { Resolve => { BusinessMinutes => 60*8 } },
         'two b-hours for reply and 3 real days for resolve' => {
+            OutOfHours => {
+                Response => { RealMinutes => +60 },
+                Resolve => { RealMinutes => +60*24 },
+            },
             Response => { BusinessMinutes => 60*2 },
             Resolve  => { RealMinutes     => 60*24*3 },
         },
@@ -75,31 +78,43 @@ we support.
 
 sub Agreements {
     my $self = shift;
-    my %args = ( Type => 'Response', @_ );
+    my %args = ( Type => 'Response', Time => undef, @_ );
 
     my $class = $RT::SLA{'Module'} || 'Business::SLA';
     eval "require $class" or die $@;
-    my $SLA = $class->new(
-        BusinessHours     => $self->BusinessHours,
-        InHoursDefault    => $RT::SLA{'InHoursDefault'},
-        OutOfHoursDefault => $RT::SLA{'OutOfHoursDefault'},
-    );
+    my $SLA = $class->new( BusinessHours => $self->BusinessHours );
+
+    my $out_of_hours = 0;
+    if ( $args{'Time'} && !$SLA->IsInHours( $args{'Time'} ) ) {
+        $out_of_hours = 1;
+    }
 
     my $levels = $RT::SLA{'Levels'};
-    foreach my $level ( keys %$levels ) {
-        my $description = $levels->{ $level }{ $args{'Type'} };
-        unless ( defined $description ) {
-            $RT::Logger->warning("No $args{'Type'} agreement for $level");
+    while ( my ($level, $meta) = each %$levels ) {
+        unless ( defined $meta->{ $args{'Type'} } ) {
+            $RT::Logger->warning("No $args{'Type'} agreement for '$level' service level");
             next;
         }
 
-        if ( ref $description ) {
-            $SLA->Add( $level => %$description );
-        } elsif ( $levels->{ $level } =~ /^\d+$/ ) {
-            $SLA->Add( $level => BusinessMinutes => $description );
+        my %props;
+        if ( ref $meta->{ $args{'Type'} } ) {
+            %props = %{ $meta->{ $args{'Type'} } };
+        } elsif ( $meta->{ $args{'Type'} } =~ /^\d+$/ ) {
+            %props = ( BusinessMinutes => $meta->{ $args{'Type'} } );
         } else {
             $RT::Logger->error("Levels of SLA should be either number or hash ref");
+            next;
         }
+
+        if ( $out_of_hours and my $tmp = $meta->{ 'OutOfHours' }{ $args{'Type'} } ) {
+            foreach ( qw(RealMinutes BusinessMinutes) ) {
+                next unless $tmp->{ $_ };
+                $props{ $_ } ||= 0;
+                $props{ $_ } += $tmp->{ $_ };
+            }
+        }
+
+        $SLA->Add( $level => %props );
     }
 
     return $SLA;
