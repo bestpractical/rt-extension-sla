@@ -117,6 +117,21 @@ sub GetCustomField {
     return $args{'Ticket'}->QueueObj->CustomField( $args{'CustomField'} );
 }
 
+sub GetDefaultServiceLevel {
+    my $self = shift;
+    my %args = (Ticket => undef, Queue => undef, @_);
+    unless ( $args{'Queue'} || $args{'Ticket'} ) {
+        $args{'Ticket'} = $self->TicketObj if $self->can('TicketObj');
+    }
+    if ( !$args{'Queue'} && $args{'Ticket'} ) {
+        $args{'Queue'} = $args{'Ticket'}->QueueObj;
+    }
+    if ( $args{'Queue'} ) {
+        # TODO: here we should implement per queue defaults
+    }
+    return $RT::SLA{'Default'};
+}
+
 =head1 DESIGN
 
 =head2 Classes
