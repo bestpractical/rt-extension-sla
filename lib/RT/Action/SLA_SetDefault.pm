@@ -38,7 +38,7 @@ sub Commit {
     unless ( $level ) {
         $RT::Logger->info(
             "No default service level for ticket #". $self->TicketObj->id 
-            ." in queue ". $self->TicketObj->QueueObj->Name;
+            ." in queue ". $self->TicketObj->QueueObj->Name );
         return 1;
     }
 
