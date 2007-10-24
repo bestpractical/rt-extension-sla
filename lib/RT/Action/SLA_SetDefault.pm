@@ -34,14 +34,11 @@ sub Commit {
         return 1;
     }
 
-    my $SLA = $self->Agreements;
-    my $level = $SLA->SLA( $self->TransactionObj->CreatedObj->Unix );
+    my $level = $self->GetDefaultServiceLevel;
     unless ( $level ) {
-        if ( $SLA->IsInHours( $self->TransactionObj->CreatedObj->Unix ) ) {
-            $RT::Logger->debug("No default service level for in hours time");
-        } else {
-            $RT::Logger->debug("No default service level for out of hours time");
-        }
+        $RT::Logger->info(
+            "No default service level for ticket #". $self->TicketObj->id 
+            ." in queue ". $self->TicketObj->QueueObj->Name;
         return 1;
     }
 
