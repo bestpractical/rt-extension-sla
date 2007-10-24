@@ -5,11 +5,7 @@
         Type        => 'SelectSingle',
         Disabled    => 0,
         Description => 'Service Level Agreement',
-        Values      => [
-            { Name => 'Full service',               SortOrder => 1 },
-            { Name => 'Full service: out of hours', SortOrder => 2 },
-            { Name => 'Reduced service',            SortOrder => 3 },
-        ],
+        Values      => [ ],
     },
 );
 
@@ -21,8 +17,13 @@
     },
     {  Name        => '[SLA] Require Starts set', # loc
        Description => 'Detect a situation when we should set Starts date' , # loc
-       ApplicableTransTypes => 'Create',
+       ApplicableTransTypes => 'Create,CustomField',
        ExecModule => 'SLA_RequireStartsSet',
+    },
+    {  Name        => '[SLA] Require Due set', # loc
+       Description => 'Detect a situation when we should set Due date' , # loc
+       ApplicableTransTypes => 'Create,CustomField',
+       ExecModule => 'SLA_RequireDueSet',
     },
 );
 
@@ -35,6 +36,10 @@
        Description => 'Set the starts date according to an agreement' , # loc
        ExecModule  => 'SLA_SetStarts',
     },
+    {  Name        => '[SLA] Set due date', # loc
+       Description => 'Set the due date according to an agreement' , # loc
+       ExecModule  => 'SLA_SetDue',
+    },
 );
 
 @Scrips = (
@@ -45,6 +50,10 @@
     {  Description       => "[SLA] Set starts date if needed",
        ScripCondition    => '[SLA] Require starts set',
        ScripAction       => '[SLA] Set starts date',
+       Template          => 'Blank' },
+    {  Description       => "[SLA] Set due date if needed",
+       ScripCondition    => '[SLA] Require due set',
+       ScripAction       => '[SLA] Set due date',
        Template          => 'Blank' },
 );
 
