@@ -15,7 +15,7 @@ Look up the SLA of the ticket and set the Starts date accordingly. Nothing happe
 if the ticket has no SLA defined.
 
 Note that this action doesn't check if Starts field is set already, so you can
-use it set the field in a force mode or can protect field using a condition
+use it to set the field in a force mode or can protect field using a condition
 that checks value of Starts.
 
 =cut
@@ -28,7 +28,7 @@ sub Commit {
     my $ticket = $self->TicketObj;
     my $level = $ticket->FirstCustomFieldValue('SLA');
     unless ( $level ) {
-        $RT::Logger->debug('Ticket #'. $ticket->id .' has no dervice level defined, skip setting Starts');
+        $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined, skip setting Starts');
         return 1;
     }
 
