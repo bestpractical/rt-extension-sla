@@ -22,9 +22,8 @@ sub IsApplicable {
 
     if ( $self->TransactionObj->Type eq 'Create' ) {
         return 1 if $self->TicketObj->FirstCustomFieldValue('SLA');
-    } elsif ( $self->TransactionObj->Type eq 'Create' ) {
-        return 1 if $self->IsCustomFieldChange('SLA');
     }
+    return 1 if $self->IsCustomFieldChange('SLA');
     return 0;
 }
 
