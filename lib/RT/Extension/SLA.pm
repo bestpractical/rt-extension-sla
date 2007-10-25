@@ -9,6 +9,130 @@ RT::Extension::SLA - Service Level Agreements
 
 =head1 DESCRIPTION
 
+=head1 SPECIFICATION
+
+To enable service level agreements for a queue administrtor
+should create and apply SLA custom field. To define different
+levels for different queues he CAN create several CFs with
+the same name and different set of values. All CFs MUST be
+of the same 'select one value' type.
+
+Values of the CF(s) define service levels.
+
+Each service level can be described using several options:
+StartImmediately, Resolve and Response.
+
+=head2 StartImmediately (boolean, false)
+
+By default when ticket is created Starts date is set to
+first business minute after time of creation. In other
+words if ticket is created during business hours then
+Starts will be equal to Created time, otherwise it'll
+be beginning of the next business day.
+
+However, if you provide 24/7 support then you most
+probably would be interested in Starts to be always equal
+to Created time. In this case you can set option
+StartImmediately to true value.
+
+Example:
+    '24/7' => {
+        StartImmediately => 1,
+        Response => { RealMinutes => 30 },
+    },
+    'standard' => {
+        StartImmediately => 0, # can be ommited as it's default
+        Response => { BusinessMinutes => 2*60 },
+    },
+
+=head2 Resolve and Response (interval, no defaults)
+
+These two options define deadlines for resolve of a ticket
+and reply to customer(requestors) questions accordingly.
+
+You can define them using real time, business or both. Read more
+about the latter below.
+
+The Due date field is used to store calculated deadlines.
+
+=head3 Resolve
+
+Defines deadline when a ticket should be resolved. This option is
+quite simple and straightforward when used without L</Response>.
+
+Examples:
+    # 8 business hours
+    'simple' => { Resolve => 60*8 },
+    ...
+    # one real week
+    'hard' => { Resolve => { RealMinutes => 60*24*7 } },
+
+
+=head3 Response
+
+In many companies providing support service(s) resolve time
+of a ticket is less important than time of response to requestors
+from stuff members.
+
+You can use Response option to define such deadlines. When you're
+using this option Due time "flips" when requestors and non-requestors
+reply to a ticket. We set Due date when a ticket's created, unset
+when non-requestor replies... until ticket is closed when ticket's
+due date is also unset.
+
+B<NOTE> that behaviour changes when Resolve and Response options
+are combined, read below.
+
+=head3 Using both Resolve and Response in the same level
+
+Resolve and Response can be combined. In such case due date is set
+according to the earliest of two deadlines and never is dropped to
+not set. When non-requestor replies to a ticket, due date is changed to
+Response deadline, as well this happens when a ticket is closed. So
+all the time due date is defined.
+
+If a ticket met its Resolve deadline then due date stops "fliping" and
+is freezed and the ticket becomes overdue.
+
+Example:
+
+    'standard delivery' => {
+        Response => { RealMinutes => 60*1  }, # one hour
+        Resolve  => { RealMinutes => 60*24 }, # 24 real hours
+    },
+
+A client orders a good and due date of the orderis set to the next one
+hour, you have this hour to process the order and write a reply.
+As soon as goods are delivered you resolve tickets and usually meet
+Resolve deadline, but if you don't resolve or user replies then most
+probably there are problems with deliver or the good. And if after
+a week you keep replying to the client and always meeting one hour
+response deadline that doesn't mean the ticket is not over due.
+Due date was frozen 24 hours after creation of the order.
+
+=head3 Using business and real time in one option
+
+It's quite rare situation when people need it, but we've decided
+that deadline described using both types of time then business
+is applied first and then real time. For example:
+
+    'delivery' => {
+        Resolve => { BusinessMinutes => 1, RealMinutes => 60*8 },
+    },
+    'fast delivery' {
+        StartImmediately => 1,
+        Resolve => { RealMinutes => 60*8 },
+    },
+
+For delivery requests which come into the system during business
+hours these levels define the same deadlines, otherwise the first
+level set deadline to 8 real hours starting from the next business
+day, when tickets with the second level should be resolved in the
+next 8 hours after creation.
+
+
+=head1 OLD ideas, some havn't been integrated in the above doc
+
 =head2 v0.01
 
 * we have one Business::Hours object
