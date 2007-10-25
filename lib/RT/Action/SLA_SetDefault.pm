@@ -16,7 +16,7 @@ Sets a default level of service. Transaction's created field is used
 to calculate if things happen in hours or out of. Default value then
 figured from L<InHoursDefault|XXX> and L<OutOfHoursDefault|XXX> options.
 
-This action doesn't check if the ticket has a value allready, so you
+This action doesn't check if the ticket has a value already, so you
 have to use it with condition that checks this fact for you, however
 such behaviour allows you to force setting up default using custom
 condition. The default condition for this action is
