@@ -273,7 +273,15 @@ sub GetDefaultServiceLevel {
         $args{'Queue'} = $args{'Ticket'}->QueueObj;
     }
     if ( $args{'Queue'} ) {
-        # TODO: here we should implement per queue defaults
+        local $@;
+        eval { require RT::Extension::QueueSLA };
+        if ( $@ ) {
+            $RT::Logger->crit("Couldn't load RT::Extension::QueueSLA: $@");
+        }
+        else {
+            return $self->TicketObj->QueueObj->SLA
+              if $self->TicketObj->QueueObj->SLA;
+        }
     }
     return $RT::SLA{'Default'};
 }
