@@ -20,8 +20,10 @@ sub IsApplicable {
     my $self = shift;
     return 0 unless $self->SLAIsApplied;
 
-    if ( $self->TransactionObj->Type eq 'Create' ) {
+    my $type = $self->TransactionObj->Type;
+    if ( $type eq 'Create' || $type eq 'Correspond' ) {
         return 1 if $self->TicketObj->FirstCustomFieldValue('SLA');
+        return 0;
     }
     return 1 if $self->IsCustomFieldChange('SLA');
     return 0;
