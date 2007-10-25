@@ -88,7 +88,7 @@ are combined, read below.
 Resolve and Response can be combined. In such case due date is set
 according to the earliest of two deadlines and never is dropped to
 not set. When non-requestor replies to a ticket, due date is changed to
-Response deadline, as well this happens when a ticket is closed. So
+Resolve deadline, as well this happens when a ticket is closed. So
 all the time due date is defined.
 
 If a ticket met its Resolve deadline then due date stops "fliping" and
@@ -101,11 +101,11 @@ Example:
         Resolve  => { RealMinutes => 60*24 }, # 24 real hours
     },
 
-A client orders a good and due date of the orderis set to the next one
+A client orders goods and due date of the order is set to the next one
 hour, you have this hour to process the order and write a reply.
 As soon as goods are delivered you resolve tickets and usually meet
 Resolve deadline, but if you don't resolve or user replies then most
-probably there are problems with deliver or the good. And if after
+probably there are problems with deliver or the goods. And if after
 a week you keep replying to the client and always meeting one hour
 response deadline that doesn't mean the ticket is not over due.
 Due date was frozen 24 hours after creation of the order.
@@ -117,7 +117,7 @@ that deadline described using both types of time then business
 is applied first and then real time. For example:
 
     'delivery' => {
-        Resolve => { BusinessMinutes => 1, RealMinutes => 60*8 },
+        Resolve => { BusinessMinutes => 60*8, RealMinutes => 60*8 },
     },
     'fast delivery' {
         StartImmediately => 1,
