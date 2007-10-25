@@ -209,7 +209,7 @@ sub Agreement {
         $res{'StartImmediately'} = $meta->{'StartImmediately'};
     }
 
-    if ( $meta->{'OutOfHours'}{ $args{'Type'} } && $args{'Time'} ) {
+    if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
         my $bhours = $self->BusinessHours;
         if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
@@ -221,6 +221,24 @@ sub Agreement {
     }
 
     return \%res;
+}
+
+sub Due {
+    my $self = shift;
+    my %args = ( Level => undef, Type => undef, Time => undef, @_ );
+
+    my $agreement = $self->Agreement( %args );
+    return undef unless $agreement;
+
+    my $res = $args{'Time'};
+    if ( defined $agreement->{'BusinessMinutes'} ) {
+        my $bhours = $self->BusinessHours;
+        $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
+    }
+    $res += $agreement->{'RealMinutes'}
+        if defined $agreement->{'RealMinutes'};
+
+    return $res;
 }
 
 =head2 Agreements [ Type => 'Response' ]

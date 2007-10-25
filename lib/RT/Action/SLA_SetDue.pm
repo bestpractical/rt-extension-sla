@@ -41,7 +41,37 @@ sub Commit {
         return 1;
     }
 
-    my $due = $self->EarliestDue( $level );
+    my $txn = $self->TransactionObj;
+
+    my $last_reply = $self->LastCorrespond;
+    $RT::Logger->debug('Last reply to ticket #'. $ticket->id .' is txn #'. $last_reply->id );
+    my $is_requestors_act = $self->IsRequestorsAct( $last_reply );
+    $RT::Logger->debug('Txn #'. $last_reply->id .' is requestors\' action') if $is_requestors_act;
+
+    my $response_due = $self->Due(
+        Level => $level,
+        Type => 'Response',
+        Time => $last_reply->CreatedObj->Unix,
+    );
+
+    my $resolve_due = $self->Due(
+        Level => $level,
+        Type => 'Resolve',
+        Time => $ticket->CreatedObj->Unix,
+    );
+
+    my $type = $txn->Type;
+
+    my $due;
+    $due = $response_due if defined $response_due && $is_requestors_act;
+    $due = $resolve_due unless defined $due;
+    $due = $resolve_due if defined $due && defined $resolve_due && $resolve_due < $due;
+
+    if ( defined $due ) {
+        return 1 if $ticket->DueObj->Unix == $due;
+    } else {
+        return 1 if $ticket->DueObj->Unix <= 0;
+    }
 
     my $date = RT::Date->new( $RT::SystemUser );
     $date->Set( Format => 'unix', Value => $due );
@@ -54,21 +84,31 @@ sub Commit {
     return 1;
 }
 
-sub EarliestDue {
+sub IsRequestorsAct {
     my $self = shift;
-    my $level = shift;
+    my $txn = shift || $self->TransactionObj;
 
-    my $response_time = $self->TransactionObj->CreatedObj->Unix;
-    my $response_due = $self->Agreements(
-        Type => 'Response', Time => $response_time
-    )->Due( $response_time, $level );
+    return $self->TicketObj->Requestors->HasMemberRecursively(
+        $txn->CreatorObj->PrincipalObj
+    )? 1 : 0;
+}
 
-    my $create_time = $self->TicketObj->CreatedObj->Unix;
-    my $resolve_due  = $self->Agreements(
-        Type => 'Resolve', Time => $create_time
-    )->Due( $create_time, $level );
+sub LastCorrespond {
+    my $self = shift;
+    
+    my $txn = $self->TransactionObj;
+    return $txn if $txn->Type eq 'Create'
+        || $txn->Type eq 'Correspond';
 
-    return $resolve_due < $response_due? $resolve_due : $response_due;
+    my $txns = $self->TicketObj->Transactions;
+    $txns->Limit( FIELD => 'Type', VALUE => 'Correspond' );
+    $txns->Limit( FIELD => 'Type', VALUE => 'Create' );
+    $txns->OrderByCols(
+        { FIELD => 'Created', ORDER => 'DESC' },
+        { FIELD => 'id', ORDER => 'DESC' },
+    );
+    $txns->RowsPerPage(1);
+    return $txns->First;
 }
 
 1;
