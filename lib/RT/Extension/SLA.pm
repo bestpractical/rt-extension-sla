@@ -187,6 +187,42 @@ sub BusinessHours {
     return new Business::Hours;
 }
 
+sub Agreement {
+    my $self = shift;
+    my %args = ( Level => undef, Type => 'Response', Time => undef, @_ );
+
+    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
+    return undef unless $meta;
+    return undef unless $meta->{ $args{'Type'} };
+
+    my %res;
+    if ( ref $meta->{ $args{'Type'} } ) {
+        %res = %{ $meta->{ $args{'Type'} } };
+    } elsif ( $meta->{ $args{'Type'} } =~ /^\d+$/ ) {
+        %res = ( BusinessMinutes => $meta->{ $args{'Type'} } );
+    } else {
+        $RT::Logger->error("Levels of SLA should be either number or hash ref");
+        return undef;
+    }
+
+    if ( defined $meta->{'StartImmediately'} ) {
+        $res{'StartImmediately'} = $meta->{'StartImmediately'};
+    }
+
+    if ( $meta->{'OutOfHours'}{ $args{'Type'} } && $args{'Time'} ) {
+        my $bhours = $self->BusinessHours;
+        if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
+            foreach ( qw(RealMinutes BusinessMinutes) ) {
+                next unless $tmp->{ $_ };
+                $res{ $_ } ||= 0;
+                $res{ $_ } += $tmp->{ $_ };
+            }
+        }
+    }
+
+    return \%res;
+}
+
 =head2 Agreements [ Type => 'Response' ]
 
 Returns an instance of L<Business::SLA> class filled with
@@ -208,40 +244,12 @@ sub Agreements {
     eval "require $class" or die $@;
     my $SLA = $class->new( BusinessHours => $self->BusinessHours );
 
-    my $out_of_hours = 0;
-    if ( $args{'Time'} && !$SLA->IsInHours( $args{'Time'} ) ) {
-        $out_of_hours = 1;
-    }
-
     my $levels = $RT::SLA{'Levels'};
-    while ( my ($level, $meta) = each %$levels ) {
-        unless ( defined $meta->{ $args{'Type'} } ) {
-            $RT::Logger->warning("No $args{'Type'} agreement for '$level' service level");
-            next;
-        }
+    foreach my $level ( keys %$levels ) {
+        my $props = $self->Agreement( %args, Level => $level );
+        next unless $props;
 
-        my %props;
-        if ( ref $meta->{ $args{'Type'} } ) {
-            %props = %{ $meta->{ $args{'Type'} } };
-        } elsif ( $meta->{ $args{'Type'} } =~ /^\d+$/ ) {
-            %props = ( BusinessMinutes => $meta->{ $args{'Type'} } );
-        } else {
-            $RT::Logger->error("Levels of SLA should be either number or hash ref");
-            next;
-        }
-        if ( $meta->{'StartImmediately'} ) {
-            $props{'StartImmediately'} = $meta->{'StartImmediately'};
-        }
-
-        if ( $out_of_hours and my $tmp = $meta->{ 'OutOfHours' }{ $args{'Type'} } ) {
-            foreach ( qw(RealMinutes BusinessMinutes) ) {
-                next unless $tmp->{ $_ };
-                $props{ $_ } ||= 0;
-                $props{ $_ } += $tmp->{ $_ };
-            }
-        }
-
-        $SLA->Add( $level => %props );
+        $SLA->Add( $level => %$props );
     }
 
     return $SLA;
