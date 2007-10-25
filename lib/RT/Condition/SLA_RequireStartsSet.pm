@@ -18,8 +18,7 @@ Applies if Starts date is not set for the ticket.
 sub IsApplicable {
     my $self = shift;
     return 0 if $self->TicketObj->StartsObj->Unix > 0;
-
-    return 0 unless $self->SLAIsApplied;
+    return 0 unless $self->TicketObj->FirstCustomFieldValue('SLA');
     return 1;
 }
 
