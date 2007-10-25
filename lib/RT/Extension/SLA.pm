@@ -9,8 +9,6 @@ RT::Extension::SLA - Service Level Agreements
 
 =head1 DESCRIPTION
 
-=head1 SPECIFICATION
-
 To enable service level agreements for a queue administrtor
 should create and apply SLA custom field. To define different
 levels for different queues he CAN create several CFs with
@@ -20,7 +18,7 @@ of the same 'select one value' type.
 Values of the CF(s) define service levels.
 
 Each service level can be described using several options:
-StartImmediately, Resolve and Response.
+StartImmediately, OutOfHours, Resolve and Response.
 
 =head2 StartImmediately (boolean, false)
 
@@ -60,7 +58,7 @@ The Due date field is used to store calculated deadlines.
 Defines deadline when a ticket should be resolved. This option is
 quite simple and straightforward when used without L</Response>.
 
-Examples:
+Example:
     # 8 business hours
     'simple' => { Resolve => 60*8 },
     ...
@@ -117,7 +115,7 @@ that deadline described using both types of time then business
 is applied first and then real time. For example:
 
     'delivery' => {
-        Resolve => { BusinessMinutes => 60*8, RealMinutes => 60*8 },
+        Resolve => { BusinessMinutes => 0, RealMinutes => 60*8 },
     },
     'fast delivery' {
         StartImmediately => 1,
@@ -130,54 +128,32 @@ level set deadline to 8 real hours starting from the next business
 day, when tickets with the second level should be resolved in the
 next 8 hours after creation.
 
+=head2 OutOfHours (struct, no default)
 
-=head1 OLD ideas, some havn't been integrated in the above doc
+Out of hours modifier. Adds more real or business minutes to resolve
+and/or reply options if event happens out of business hours.
 
-=head2 v0.01
-
-* we have one Business::Hours object
-* several agreement levels
-* options:
-** InHoursDefault - default service level ticket created during business hours, but only if level hasn't been set
-** OutOfHoursDefault - default service level ticket created out of business hours, but only if level hasn't been set
-** Levels - each level has definition of agreements for Response and Resolve
-*** If you set a requirement for response then we set due date on create or as soon as user replies to some a in the feature, so due date means deadline for reply, as soon as somebody who is not a requestor replies we unset due
-*** if you set a requirement for resolve then we set due date on create to a point in the feature, so due date defines deadline for ticket resolving
-*** we should support situations when restrictions defined for reply and resolve, then we move due date according to reply deadlines, however when we reach resolve deadline we stop moving.
-
-*** each requirement is described by Business or Real time in terms of L<Business::SLA> module.
-
-so we'll have something like:
-%SLA => (
-    Default => 'two business hours for reply', 
-    Levels => {
-        'one real hour for reply' => { Response => { RealMinutes => 60 } },
-        'two business hours for reply' => { Response => { BusinessMinutes => 60*2 } },
-        '8 business hours for resolve' => { Resolve => { BusinessMinutes => 60*8 } },
-        'two b-hours for reply and 3 real days for resolve' => {
-            OutOfHours => {
-                Response => { RealMinutes => +60 },
-                Resolve => { RealMinutes => +60*24 },
-            },
-            Response => { BusinessMinutes => 60*2 },
-            Resolve  => { RealMinutes     => 60*24*3 },
-        },
+Example:
+    
+    'level x' => {
+        OutOfHours => { Resolve => { RealMinutes => +60*24 } },
+        Resolve    => { RealMinutes => 60*24 },
     },
-);
 
-=head v0.02
+If a request comes into the system during night then supporters have two
+days, otherwise only one.
 
-* changing service levels of a ticket in the middle of its live
+    'level x' => {
+        OutOfHours => { Response => { BusinessMinutes => +60*2 } },
+        Resolve    => { BusinessMinutes => 60 },
+    },
 
-=head random thoughts
+Supporters have two additional hours in the morning to deal with bunch
+of requests that came into the system during the last night.
 
-* Defining OutOfHours/InHours defaults sounds not that usefull for response deadlines as for resolve. For resolve I can find an example in real life: I order something in an online shop, the order comes into system when business day ended, so delivery(resolve) deadline is two business days, but in the case of in hours submission of the order they deliver during one business day. For reply deadlines I cannot imagine a situation when different InHours/OutOfHours levels are useful.
+=head2 Default service levels
 
-
-=head v0.later
-
-* default SLA for queues
-* add support for multiple b-hours definitions, this could be very helpfull when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different tickets(by requestor, queue or something else). So people would be able to handle tickets in the right order using Due dates.
+In the config and per queue defaults(this is not implemented).
 
 =cut
 
@@ -243,6 +219,8 @@ sub Due {
 
 =head2 Agreements [ Type => 'Response' ]
 
+DEPRECATED
+
 Returns an instance of L<Business::SLA> class filled with
 service levels for particular Type.
 
@@ -299,6 +277,21 @@ sub GetDefaultServiceLevel {
     }
     return $RT::SLA{'Default'};
 }
+
+=head1 TODO
+
+=head2 v0.01
+
+* we have one Business::Hours object
+* default SLA for queues
+** see below in this class
+* changing service levels of a ticket in the middle of its live
+** this should work for Due dates, for Starts makes not much sense
+
+=head2 v0.later
+
+* WebUI
+* add support for multiple b-hours definitions, this could be very helpfull when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different tickets(by requestor, queue or something else). So people would be able to handle tickets in the right order using Due dates.
 
 =head1 DESIGN
 
