@@ -37,7 +37,7 @@ sub Commit {
 
     my $level = $ticket->FirstCustomFieldValue('SLA');
     unless ( $level ) {
-        $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined, skip setting Starts');
+        $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined');
         return 1;
     }
 
