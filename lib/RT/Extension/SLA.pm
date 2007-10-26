@@ -189,7 +189,7 @@ sub Agreement {
 
     if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
         my $bhours =
-            $self->BusinessHours($RT::BusinessHours{$meta->{BusinessHours}});
+            $self->BusinessHours(%{$RT::BusinessHours{$meta->{BusinessHours}}});
         if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
                 next unless $tmp->{ $_ };
