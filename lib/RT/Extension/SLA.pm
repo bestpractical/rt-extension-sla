@@ -177,10 +177,13 @@ In the config and per queue defaults(this is not implemented).
 
 sub BusinessHours {
     my $self = shift;
+    my $name = shift || 'Default';
+
     require Business::Hours;
-    my $bhours = Business::Hours->new;
-    $bhours->business_hours(@_) if @_;
-    return $bhours;
+    my $res = new Business::Hours;
+    $res->business_hours( %{ $RT::BusinessHours{ $name } } )
+        if $RT::BusinessHours{ $name };
+    return $res;
 }
 
 sub Agreement {
@@ -206,9 +209,7 @@ sub Agreement {
     }
 
     if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
-        my $bhours =
-          $self->BusinessHours(
-            %{ $RT::BusinessHours{ $meta->{BusinessHours} || 'Default' } } );
+        my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
         if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
                 next unless $tmp->{ $_ };
@@ -231,9 +232,7 @@ sub Due {
 
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
-        my $bhours =
-          $self->BusinessHours(
-            %{ $RT::BusinessHours{ $meta->{BusinessHours} || 'Default' } } );
+        my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
         $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
     }
     $res += 60 * $agreement->{'RealMinutes'}
@@ -296,9 +295,8 @@ sub SLA {
 
     my $SLA = $class->new(
         BusinessHours => $self->BusinessHours(
-            %{ $RT::BusinessHours{ $RT::SLA{Levels}{$level}{BusinessHours}
-                      || 'Default' } }
-        )
+            $RT::SLA{'Levels'}{ $level }{'BusinessHours'}
+        ),
     );
 
     $SLA->Add( $level => %{ $self->Agreement(%args) } );
