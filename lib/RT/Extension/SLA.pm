@@ -236,7 +236,7 @@ sub Due {
             %{ $RT::BusinessHours{ $meta->{BusinessHours} || 'Default' } } );
         $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
     }
-    $res += $agreement->{'RealMinutes'}
+    $res += 60 * $agreement->{'RealMinutes'}
         if defined $agreement->{'RealMinutes'};
 
     return $res;

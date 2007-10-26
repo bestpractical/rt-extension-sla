@@ -26,6 +26,11 @@ sub Commit {
     my $self = shift;
 
     my $ticket = $self->TicketObj;
+
+# XXX I encountered a 'Couldn't set starts date: That is already the current 
+# value' warning if I didn't test it here. wierd
+    return 0 if $ticket->StartsObj->Unix > 0;
+
     my $level = $ticket->FirstCustomFieldValue('SLA');
     unless ( $level ) {
         $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined, skip setting Starts');
