@@ -7,6 +7,18 @@ package RT::Extension::SLA;
 
 RT::Extension::SLA - Service Level Agreements
 
+=head1 DESIGN QUESTIONS
+
+Here is some questionable things developers/users can comment on:
+
+=over 4
+
+=item
+
+What should happen response agreements when there is no requestors?
+
+=back
+
 =head1 DESCRIPTION
 
 To enable service level agreements for a queue administrtor
