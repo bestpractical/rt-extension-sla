@@ -32,7 +32,7 @@ sub Commit {
         return 1;
     }
 
-    my $SLA = $self->Agreements;
+    my $SLA = $self->SLA(Level => $level);
     my $starts = $SLA->Starts( $self->TransactionObj->CreatedObj->Unix, $level );
 
     my $date = RT::Date->new($RT::SystemUser);

@@ -160,7 +160,9 @@ In the config and per queue defaults(this is not implemented).
 sub BusinessHours {
     my $self = shift;
     require Business::Hours;
-    return new Business::Hours;
+    my $bhours = Business::Hours->new;
+    $bhours->business_hours(@_) if @_;
+    return $bhours;
 }
 
 sub Agreement {
@@ -186,7 +188,8 @@ sub Agreement {
     }
 
     if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
-        my $bhours = $self->BusinessHours;
+        my $bhours =
+            $self->BusinessHours($RT::BusinessHours{$meta->{BusinessHours}});
         if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
                 next unless $tmp->{ $_ };
@@ -202,13 +205,15 @@ sub Agreement {
 sub Due {
     my $self = shift;
     my %args = ( Level => undef, Type => undef, Time => undef, @_ );
+    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
 
     my $agreement = $self->Agreement( %args );
     return undef unless $agreement;
 
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
-        my $bhours = $self->BusinessHours;
+        my $bhours =
+            $self->BusinessHours(%{$RT::BusinessHours{$meta->{BusinessHours}}});
         $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
     }
     $res += $agreement->{'RealMinutes'}
@@ -216,6 +221,7 @@ sub Due {
 
     return $res;
 }
+
 
 =head2 Agreements [ Type => 'Response' ]
 
@@ -247,6 +253,34 @@ sub Agreements {
 
         $SLA->Add( $level => %$props );
     }
+
+    return $SLA;
+}
+
+=head2 SLA [ Level => $level ]
+
+Returns an instance of L<Business::SLA> class filled with the level.
+
+Now we take list of agreements and its description from the
+RT config.
+
+=cut
+
+sub SLA {
+    my $self  = shift;
+    my %args  = @_;
+    my $level = $args{Level};
+
+    my $class = $RT::SLA{'Module'} || 'Business::SLA';
+    eval "require $class" or die $@;
+
+    my $SLA = $class->new(
+        BusinessHours => $self->BusinessHours(
+            %{ $RT::BusinessHours{ $RT::SLA{Levels}{$level}{BusinessHours} } }
+        )
+    );
+
+    $SLA->Add( $level => %{ $self->Agreement(%args) } );
 
     return $SLA;
 }
