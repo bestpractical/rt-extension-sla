@@ -151,6 +151,24 @@ days, otherwise only one.
 Supporters have two additional hours in the morning to deal with bunch
 of requests that came into the system during the last night.
 
+=head2 BusinessHours
+
+Each level now supports BusinessHours option to specify your own business
+hours.
+
+    'level x' => {
+        BusinessHours => 'work just in Monday',
+        Resolve    => { BusinessMinutes => 60 },
+    },
+
+then %RT::BusinessHours should have the corresponding definition:
+
+%RT::BusinessHours = ( 'work just in Monday' => {
+        1 => { Name => 'Monday', Start => '9:00', End => '18:00' }
+        });
+
+Default Business Hours setting is in $RT::BusinessHours{'Default'}.
+
 =head2 Default service levels
 
 In the config and per queue defaults(this is not implemented).
@@ -189,7 +207,8 @@ sub Agreement {
 
     if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
         my $bhours =
-            $self->BusinessHours(%{$RT::BusinessHours{$meta->{BusinessHours}}});
+          $self->BusinessHours(
+            %{ $RT::BusinessHours{ $meta->{BusinessHours} || 'Default' } } );
         if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
                 next unless $tmp->{ $_ };
@@ -213,7 +232,8 @@ sub Due {
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
         my $bhours =
-            $self->BusinessHours(%{$RT::BusinessHours{$meta->{BusinessHours}}});
+          $self->BusinessHours(
+            %{ $RT::BusinessHours{ $meta->{BusinessHours} || 'Default' } } );
         $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
     }
     $res += $agreement->{'RealMinutes'}
@@ -276,7 +296,8 @@ sub SLA {
 
     my $SLA = $class->new(
         BusinessHours => $self->BusinessHours(
-            %{ $RT::BusinessHours{ $RT::SLA{Levels}{$level}{BusinessHours} } }
+            %{ $RT::BusinessHours{ $RT::SLA{Levels}{$level}{BusinessHours}
+                      || 'Default' } }
         )
     );
 
