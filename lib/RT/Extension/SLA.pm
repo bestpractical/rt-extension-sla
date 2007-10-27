@@ -378,14 +378,16 @@ sub GetDefaultServiceLevel {
 =head2 v0.01
 
 * default SLA for queues
-** see below in this class
-* changing service levels of a ticket in the middle of its live
-** this should work for Due dates, for Starts makes not much sense
+** implemented
+** TODO: tests
+
+* add support for multiple b-hours definitions, this could be very helpfull when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different tickets(by requestor, queue or something else). So people would be able to handle tickets in the right order using Due dates.
+** implemented
+** TODO: tests
 
 =head2 v0.later
 
 * WebUI
-* add support for multiple b-hours definitions, this could be very helpfull when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different tickets(by requestor, queue or something else). So people would be able to handle tickets in the right order using Due dates.
 
 =head1 DESIGN
 
