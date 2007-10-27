@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 9;
 
 require 't/utils.pl';
 
@@ -63,7 +63,8 @@ diag 'check Starts date with StartImmediately enabled';
     my ($id) = $ticket->Create( Queue => 'General', Subject => 'xxx' );
     ok $id, "created ticket #$id";
 
-    ok $ticket->StartsObj->Unix > 0, 'Starts date is set';
+    my $starts = $ticket->StartsObj->Unix;
+    ok $starts > 0, 'Starts date is set';
     ok abs($starts - $time) < 5, 'Starts is quite correct';
 }
 
