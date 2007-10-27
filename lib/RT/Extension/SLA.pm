@@ -259,10 +259,11 @@ sub Agreement {
 sub Due {
     my $self = shift;
     my %args = ( Level => undef, Type => undef, Time => undef, @_ );
-    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
 
     my $agreement = $self->Agreement( %args );
     return undef unless $agreement;
+
+    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
 
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
@@ -275,67 +276,17 @@ sub Due {
     return $res;
 }
 
-
-=head2 Agreements [ Type => 'Response' ]
-
-DEPRECATED
-
-Returns an instance of L<Business::SLA> class filled with
-service levels for particular Type.
-
-Now we take list of agreements and its description from the
-RT config.
-
-By default Type is 'Response'. 'Resolve' is another type
-we support.
-
-=cut
-
-sub Agreements {
+sub Starts {
     my $self = shift;
-    my %args = ( Type => 'Response', Time => undef, @_ );
+    my %args = ( Level => undef, Time => undef, @_ );
 
-    my $class = $RT::SLA{'Module'} || 'Business::SLA';
-    eval "require $class" or die $@;
-    my $SLA = $class->new( BusinessHours => $self->BusinessHours );
+    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
+    return undef unless $meta;
 
-    my $levels = $RT::SLA{'Levels'};
-    foreach my $level ( keys %$levels ) {
-        my $props = $self->Agreement( %args, Level => $level );
-        next unless $props;
+    return $args{'Time'} if $meta->{'StartImmediately'};
 
-        $SLA->Add( $level => %$props );
-    }
-
-    return $SLA;
-}
-
-=head2 SLA [ Level => $level ]
-
-Returns an instance of L<Business::SLA> class filled with the level.
-
-Now we take list of agreements and its description from the
-RT config.
-
-=cut
-
-sub SLA {
-    my $self  = shift;
-    my %args  = @_;
-    my $level = $args{Level};
-
-    my $class = $RT::SLA{'Module'} || 'Business::SLA';
-    eval "require $class" or die $@;
-
-    my $SLA = $class->new(
-        BusinessHours => $self->BusinessHours(
-            $RT::SLA{'Levels'}{ $level }{'BusinessHours'}
-        ),
-    );
-
-    $SLA->Add( $level => %{ $self->Agreement(%args) } );
-
-    return $SLA;
+    my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
+    return $bhours->first_after( $args{'Time'} );
 }
 
 sub GetCustomField {
