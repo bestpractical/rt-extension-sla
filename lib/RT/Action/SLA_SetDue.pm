@@ -43,16 +43,16 @@ sub Commit {
 
     my $txn = $self->TransactionObj;
 
-    my $last_reply = $self->LastCorrespond;
-    $RT::Logger->debug('Last reply to ticket #'. $ticket->id .' is txn #'. $last_reply->id );
-    my $is_requestors_act = $self->IsRequestorsAct( $last_reply );
-    $RT::Logger->debug('Txn #'. $last_reply->id .' is requestors\' action') if $is_requestors_act;
+    my $last_reply = $self->LastRequestorsEffectiveAct;
+    $RT::Logger->debug('Last effective requestors\' reply to ticket #'. $ticket->id .' is txn #'. $last_reply->id )
+        if $last_reply;
 
-    my $response_due = $self->Due(
+    my $response_due;
+    $response_due = $self->Due(
         Level => $level,
         Type => 'Response',
         Time => $last_reply->CreatedObj->Unix,
-    );
+    ) if $last_reply;
 
     my $resolve_due = $self->Due(
         Level => $level,
@@ -60,10 +60,8 @@ sub Commit {
         Time => $ticket->CreatedObj->Unix,
     );
 
-    my $type = $txn->Type;
-
     my $due;
-    $due = $response_due if defined $response_due && $is_requestors_act;
+    $due = $response_due if defined $response_due;
     $due = $resolve_due unless defined $due;
     $due = $resolve_due if defined $due && defined $resolve_due && $resolve_due < $due;
 
@@ -88,17 +86,16 @@ sub IsRequestorsAct {
     my $self = shift;
     my $txn = shift || $self->TransactionObj;
 
-    return $self->TicketObj->Requestors->HasMemberRecursively(
-        $txn->CreatorObj->PrincipalObj
-    )? 1 : 0;
+    my $actor = $txn->CreatorObj->PrincipalObj;
+
+    # owner is always treated as non-requestor
+    return 0 if $actor->id == $self->TicketObj->Owner;
+
+    return $self->TicketObj->Requestors->HasMemberRecursively( $actor )? 1 : 0;
 }
 
-sub LastCorrespond {
+sub LastRequestorsEffectiveAct {
     my $self = shift;
-    
-    my $txn = $self->TransactionObj;
-    return $txn if $txn->Type eq 'Create'
-        || $txn->Type eq 'Correspond';
 
     my $txns = $self->TicketObj->Transactions;
     $txns->Limit( FIELD => 'Type', VALUE => 'Correspond' );
@@ -107,8 +104,13 @@ sub LastCorrespond {
         { FIELD => 'Created', ORDER => 'DESC' },
         { FIELD => 'id', ORDER => 'DESC' },
     );
-    $txns->RowsPerPage(1);
-    return $txns->First;
+
+    my $res;
+    while ( my $txn = $txns->Next ) {
+        return $res unless $self->IsRequestorsAct( $txn );
+        $res = $txn;
+    }
+    return $res;
 }
 
 1;
