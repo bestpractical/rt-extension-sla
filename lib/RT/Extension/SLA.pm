@@ -13,10 +13,6 @@ Here is some questionable things developers/users can comment on:
 
 =over 4
 
-=item
-
-What should happen response agreements when there is no requestors?
-
 =back
 
 =head1 DESCRIPTION
@@ -93,16 +89,37 @@ due date is also unset.
 B<NOTE> that behaviour changes when Resolve and Response options
 are combined, read below.
 
+As response deadlines are calculated using requestors' activity
+so several rules applies to make things quite sane:
+
+=over 4
+
+=item
+
+If a ticket has no requestors then it has no response deadline.
+
+=item
+
+If a ticket is created by non-requestor then due date is left unset.
+
+=item
+
+If owner of a ticket is its requestor then his actions are treated
+as non-requestors'.
+
+=back
+
 =head3 Using both Resolve and Response in the same level
 
 Resolve and Response can be combined. In such case due date is set
 according to the earliest of two deadlines and never is dropped to
-not set. When non-requestor replies to a ticket, due date is changed to
-Resolve deadline, as well this happens when a ticket is closed. So
-all the time due date is defined.
+not set.
 
-If a ticket met its Resolve deadline then due date stops "fliping" and
-is freezed and the ticket becomes overdue.
+If a ticket met its Resolve deadline then due date stops "fliping",
+is freezed and the ticket becomes overdue. Before that moment when
+non-requestor replies to a ticket, due date is changed to Resolve
+deadline instead of 'Not Set', as well this happens when a ticket
+is closed. So all the time due date is defined.
 
 Example:
 
@@ -355,7 +372,6 @@ sub GetDefaultServiceLevel {
 
 =head2 v0.01
 
-* we have one Business::Hours object
 * default SLA for queues
 ** see below in this class
 * changing service levels of a ticket in the middle of its live
