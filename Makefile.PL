@@ -6,7 +6,6 @@ license('perl');
 
 build_requires('Test::More');
 
-requires('Business::SLA');
 requires('Business::Hours');
 auto_install();
 
