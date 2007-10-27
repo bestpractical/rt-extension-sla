@@ -65,21 +65,7 @@ sub Commit {
     $due = $resolve_due unless defined $due;
     $due = $resolve_due if defined $due && defined $resolve_due && $resolve_due < $due;
 
-    if ( defined $due ) {
-        return 1 if $ticket->DueObj->Unix == $due;
-    } else {
-        return 1 if $ticket->DueObj->Unix <= 0;
-    }
-
-    my $date = RT::Date->new( $RT::SystemUser );
-    $date->Set( Format => 'unix', Value => $due );
-    my ($status, $msg) = $self->TicketObj->SetDue( $date->ISO );
-    unless ( $status ) {
-        $RT::Logger->error("Couldn't set due date: $msg");
-        return 0;
-    }
-
-    return 1;
+    return $self->SetDateField( Due => $due );
 }
 
 sub IsRequestorsAct {
