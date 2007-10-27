@@ -20,9 +20,9 @@ my $bhours = RT::Extension::SLA->BusinessHours;
 diag 'check Starts date';
 {
     %RT::SLA = (
-        Default => 'start',
+        Default => 'standard',
         Levels => {
-            'starts' => {
+            'standard' => {
                 Response => 2*60,
                 Resolve => 7*60*24,
             },
@@ -65,6 +65,6 @@ diag 'check Starts date with StartImmediately enabled';
 
     my $starts = $ticket->StartsObj->Unix;
     ok $starts > 0, 'Starts date is set';
-    ok abs($starts - $time) < 5, 'Starts is quite correct';
+    is $starts, $ticket->CreatedObj->Unix, 'Starts is correct';
 }
 
