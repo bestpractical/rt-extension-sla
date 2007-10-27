@@ -361,9 +361,9 @@ sub GetDefaultServiceLevel {
     }
     if ( $args{'Queue'} ) {
         local $@;
-        eval { require RT::Extension::QueueSLA };
+        eval { require RT::Queue_SLA };
         if ( $@ ) {
-            $RT::Logger->crit("Couldn't load RT::Extension::QueueSLA: $@");
+            $RT::Logger->crit("Couldn't load RT::Queue_SLA: $@");
         }
         else {
             return $self->TicketObj->QueueObj->SLA
