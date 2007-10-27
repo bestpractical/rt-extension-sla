@@ -96,6 +96,11 @@ so several rules applies to make things quite sane:
 
 =item
 
+If requestors reply multiple times and are ignored then the deadline
+is calculated using the oldest requestors' correspondence.
+
+=item
+
 If a ticket has no requestors then it has no response deadline.
 
 =item
