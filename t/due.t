@@ -14,7 +14,7 @@ RT::Init();
 use_ok 'RT::Ticket';
 use_ok 'RT::Extension::SLA';
 
-diag 'check Due date';
+diag 'check change of Due date when SLA for a ticket is changed';
 {
     %RT::SLA = (
         Default => '2',
@@ -44,5 +44,154 @@ diag 'check Due date';
     ok $new_due > $time, 'Due date is in the future';
 
     is $new_due, $orig_due+2*60*60, 'difference is two hours';
+}
+
+diag 'when not requestor creates a ticket, we dont set due date';
+{
+    %RT::SLA = (
+        Default => '2',
+        Levels => {
+            '2' => { Response => { RealMinutes => 60*2 } },
+        },
+    );
+
+    my $ticket = RT::Ticket->new( $RT::SystemUser );
+    my ($id) = $ticket->Create(
+        Queue => 'General',
+        Subject => 'xxx',
+        Requestor => 'user@example.com',
+    );
+    ok $id, "created ticket #$id";
+
+    is $ticket->FirstCustomFieldValue('SLA'), '2', 'default sla';
+
+    my $due = $ticket->DueObj->Unix;
+    ok $due <= 0, 'Due date is not set';
+}
+
+diag 'check that reply to requestors unset due date';
+{
+    %RT::SLA = (
+        Default => '2',
+        Levels => {
+            '2' => { Response => { RealMinutes => 60*2 } },
+        },
+    );
+
+    my $root = RT::User->new( $RT::SystemUser );
+    $root->LoadByEmail('root@localhost');
+    ok $root->id, 'loaded root user';
+
+    # requestor creates
+    my $id;
+    {
+        my $ticket = RT::Ticket->new( $root );
+        ($id) = $ticket->Create(
+            Queue => 'General',
+            Subject => 'xxx',
+            Requestor => $root->id,
+        );
+        ok $id, "created ticket #$id";
+
+        is $ticket->FirstCustomFieldValue('SLA'), '2', 'default sla';
+
+        my $due = $ticket->DueObj->Unix;
+        ok $due > 0, 'Due date is set';
+    }
+
+    # non-requestor reply
+    {
+        my $ticket = RT::Ticket->new( $RT::SystemUser );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+        $ticket->Correspond( Content => 'we are working on this.' );
+
+        $ticket = RT::Ticket->new( $root );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+
+        my $due = $ticket->DueObj->Unix;
+        ok $due <= 0, 'Due date is not set';
+    }
+
+    # requestor reply
+    {
+        my $ticket = RT::Ticket->new( $root );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+
+        $ticket->Correspond( Content => 'what\'s going on with my ticket?' );
+
+        $ticket = RT::Ticket->new( $root );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+
+        my $due = $ticket->DueObj->Unix;
+        ok $due > 0, 'Due date is set again';
+    }
+}
+
+diag 'check that replies dont affect resolve deadlines';
+{
+    %RT::SLA = (
+        Default => '2',
+        Levels => {
+            '2' => { Resolve => { RealMinutes => 60*2 } },
+        },
+    );
+
+    my $root = RT::User->new( $RT::SystemUser );
+    $root->LoadByEmail('root@localhost');
+    ok $root->id, 'loaded root user';
+
+    # requestor creates
+    my ($id, $orig_due);
+    {
+        my $ticket = RT::Ticket->new( $root );
+        ($id) = $ticket->Create(
+            Queue => 'General',
+            Subject => 'xxx',
+            Requestor => $root->id,
+        );
+        ok $id, "created ticket #$id";
+
+        is $ticket->FirstCustomFieldValue('SLA'), '2', 'default sla';
+
+        $orig_due = $ticket->DueObj->Unix;
+        ok $orig_due > 0, 'Due date is set';
+    }
+
+    # non-requestor reply
+    {
+        my $ticket = RT::Ticket->new( $RT::SystemUser );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+        $ticket->Correspond( Content => 'we are working on this.' );
+
+        $ticket = RT::Ticket->new( $root );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+
+        my $due = $ticket->DueObj->Unix;
+        ok $due > 0, 'Due date is set';
+        is $due, $orig_due, 'due is not changed';
+    }
+
+    # requestor reply
+    {
+        my $ticket = RT::Ticket->new( $root );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+
+        $ticket->Correspond( Content => 'what\'s going on with my ticket?' );
+
+        $ticket = RT::Ticket->new( $root );
+        $ticket->Load( $id );
+        ok $ticket->id, "loaded ticket #$id";
+
+        my $due = $ticket->DueObj->Unix;
+        ok $due > 0, 'Due date is set';
+        is $due, $orig_due, 'due is not changed';
+    }
 }
 
