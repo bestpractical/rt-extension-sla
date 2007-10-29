@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 9;
 
 require 't/utils.pl';
 
@@ -13,6 +13,11 @@ RT::Init();
 
 use_ok 'RT::Ticket';
 use_ok 'RT::Extension::SLA';
+
+use Test::MockTime qw( :all );
+
+# XXX, TODO 
+# we assume the RT's Timezone is UTC now, need a smart way to get over that.
 
 diag 'check business hours';
 {
@@ -26,7 +31,6 @@ diag 'check business hours';
             },
             Monday => {
                 Resolve       => { BusinessMinutes => 60 },
-                BusinessHours => 'Default',
             },
         },
     );
@@ -48,7 +52,7 @@ diag 'check business hours';
         },
     );
 
-    my $time = time;
+    set_absolute_time('2007-01-01T00:00:00Z');
 
     my $ticket = RT::Ticket->new($RT::SystemUser);
     my ($id) = $ticket->Create( Queue => 'General', Subject => 'xxx' );
@@ -56,17 +60,14 @@ diag 'check business hours';
 
     is( $ticket->FirstCustomFieldValue('SLA'), 'Sunday', 'default sla' );
 
+    my $start = $ticket->StartsObj->Unix;
     my $due = $ticket->DueObj->Unix;
-    ok( $due > 0, 'Due date is set' );
-    ok( $due > $time, 'Due date is in the future');
-
-    my ( undef,$min,$hour,$mday,$mon,$year,$wday ) = gmtime( $due );
-    is( $wday, 0, 'original due time is on Sunday' );
+    is( $start, 1168160400, 'Start date is 2007-01-07T09:00:00Z' );
+    is( $due, 1168164000, 'Due date is 2007-01-07T10:00:00Z' );
 
     $ticket->AddCustomFieldValue( Field => 'SLA', Value => 'Monday' );
     is( $ticket->FirstCustomFieldValue('SLA'), 'Monday', 'new sla' );
     $due = $ticket->DueObj->Unix;
-    ( undef,$min,$hour,$mday,$mon,$year,$wday ) = gmtime( $due );
-    is( $wday, 1, 'new due time is on Monday' );
+    is( $due, 1167645600, 'Due date is 2007-01-01T10:00:00Z' );
 }
 
