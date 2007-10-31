@@ -22,6 +22,7 @@ use Test::MockTime qw( :all );
 diag 'check business hours';
 {
 
+    no warnings 'once';
     %RT::SLA = (
         Default => 'Sunday',
         Levels  => {
