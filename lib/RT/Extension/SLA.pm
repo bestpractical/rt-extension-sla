@@ -317,8 +317,10 @@ sub GetDefaultServiceLevel {
             $RT::Logger->crit("Couldn't load RT::Queue_SLA: $@");
         }
         else {
-            return $self->TicketObj->QueueObj->SLA
-              if $self->TicketObj->QueueObj->SLA;
+            return $args{'Queue'}->SLA if $args{'Queue'}->SLA;
+        }
+        if ( $RT::SLA{'QueueDefault'} && $RT::SLA{'QueueDefault'}{ $args{'Queue'}->Name } ) {
+            return $RT::SLA{'QueueDefault'}{ $args{'Queue'}->Name };
         }
     }
     return $RT::SLA{'Default'};
