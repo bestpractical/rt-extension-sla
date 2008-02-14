@@ -23,9 +23,9 @@ sub IsCustomFieldChange {
     
     return 0 unless $txn->Type eq 'CustomField';
 
-    my $cf = $self->TicketObj->QueueObj->CustomField( $cf_name );
+    my $cf = $self->GetCustomField( $cf_name );
     unless ( $cf->id ) {
-        $RT::Logger->error("Couldn't load the '$cf_name' field");
+        $RT::Logger->error("Custom field '$cf_name' is not applied to ticket #". $self->TicketObj->id);
         return 0;
     }
     return 0 unless $cf->id == $txn->Field;
