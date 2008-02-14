@@ -1,10 +1,11 @@
 --- 
 abstract: RT Extension-SLA Extension
-author: Ruslan Zakirov <ruz@bestpractical.com>
+author: 
+  - Ruslan Zakirov <ruz@bestpractical.com>
 build_requires: 
   Test::More: 0
 distribution_type: module
-generated_by: Module::Install version 0.67
+generated_by: Module::Install version 0.68
 license: perl
 meta-spec: 
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
