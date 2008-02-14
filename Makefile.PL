@@ -1,8 +1,8 @@
 use inc::Module::Install;
 
 RTx ('RT-Extension-SLA');
-author ('Ruslan Zakirov <ruz@bestpractical.com>');
-license('perl');
+all_from('lib/RT/Extension/SLA.pm');
+license('gpl2');
 
 build_requires('Test::More');
 
