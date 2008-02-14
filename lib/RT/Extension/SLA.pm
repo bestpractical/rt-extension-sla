@@ -1,3 +1,4 @@
+use 5.8.0;
 use strict;
 use warnings;
 
@@ -14,16 +15,38 @@ service levels.
 
 =head1 CONFIGURATION
 
-To enable service level agreements for a queue administrator
-should create and apply SLA custom field. To define different
-levels for different queues he CAN create several CFs with
-the same name and different set of values. All CFs MUST be
-of the same 'select one value' type.
+Service level agreements of tickets is controlled by SLA custom
+field. It's created during `make initdb` step and applied globally.
+This CF MUST be of 'select one value' type. Values of the CF
+define service levels.
 
-Values of the CF(s) define service levels.
+It's possible to define different set of levels for different
+queues. You can create several CFs with the same name and
+different set of values. But if you move tickets between
+queues a lot then it's gonna be a problem and it's preferred
+to use ONE SLA custom field.
+
+There is no WebUI in the current version. Almost everything is
+controlled in the RT's config using option C<%RT::ServiceAgreements>
+and C<%RT::ServiceBusinessHours>. For example:
+
+    %RT::ServiceAgreements = (
+        Default => '4h',
+        QueueDefault => {
+            'Incident' => '2h',
+        },
+        Levels => {
+            '2h' => { Resolve => { RealMinutes => 60*2 } },
+            '4h' => { Resolve => { RealMinutes => 60*4 } },
+        },
+    );
 
 Each service level can be described using several options:
-L</StartImmediately>, L</OutOfHours>, L</Resolve> and L</Response>.
+L<StartImmediately|/"StartImmediately (boolean, false)">,
+L<Resolve|/"Resolve and Response (interval, no defaults)">,
+L<Response|/"Resolve and Response (interval, no defaults)">,
+L<OutOfHours|/"OutOfHours (struct, no default)">
+and L</BusinessHours>.
 
 =head2 StartImmediately (boolean, false)
 
@@ -54,7 +77,7 @@ These two options define deadlines for resolve of a ticket
 and reply to customer(requestors) questions accordingly.
 
 You can define them using real time, business or both. Read more
-about the latter below.
+about the latter L<below|/"Using both Resolve and Response in the same level">.
 
 The Due date field is used to store calculated deadlines.
 
@@ -79,26 +102,26 @@ from stuff members.
 
 You can use Response option to define such deadlines. When you're
 using this option Due time "flips" when requestors and non-requestors
-reply to a ticket. We set Due date when a ticket's created, unset
+reply to a ticket. We set Due date when a ticket is created, unset
 when non-requestor replies... until ticket is closed when ticket's
-due date is also unset.
+Due date is also unset.
 
 B<NOTE> that behaviour changes when Resolve and Response options
-are combined, read below.
+are combined, read L<below|/"Using both Resolve and Response in the same level">.
 
 As response deadlines are calculated using requestors' activity
-so several rules applies to make things quite sane:
+so several rules applies to make things sane:
 
 =over 4
 
 =item
 
-If requestors reply multiple times and are ignored then the deadline
+If requestor(s) reply multiple times and are ignored then the deadline
 is calculated using the oldest requestors' correspondence.
 
 =item
 
-If a ticket has no requestors then it has no response deadline.
+If a ticket has no requestor(s) then it has no response deadline.
 
 =item
 
@@ -115,7 +138,7 @@ as non-requestors'.
 
 Resolve and Response can be combined. In such case due date is set
 according to the earliest of two deadlines and never is dropped to
-not set.
+'not set'.
 
 If a ticket met its Resolve deadline then due date stops "fliping",
 is freezed and the ticket becomes overdue. Before that moment when
@@ -162,8 +185,8 @@ next 8 hours after creation.
 =head2 OutOfHours (struct, no default)
 
 Out of hours modifier. Adds more real or business minutes to resolve
-and/or reply options if event happens out of business hours, see also
-</BusinessHours> below.
+and/or reply options if event happens out of business hours, read also
+</"Configuring business hours"> below.
 
 Example:
     
@@ -183,16 +206,19 @@ hours, otherwise only one.
 Supporters have two additional hours in the morning to deal with bunch
 of requests that came into the system during the last night.
 
-=head2 BusinessHours
+=head2 Configuring business hours
 
 In the config you can set one or more work schedules. Use the following
 format:
 
     %RT::ServiceBusinessHours = (
-        'label to use' => {
+        'Default' => {
             ... description ...
         },
-        'another label' => {
+        'Support' => {
+            ... description ...
+        },
+        'Sales' => {
             ... description ...
         },
     );
@@ -211,15 +237,36 @@ hours.
 
 then %RT::ServiceBusinessHours should have the corresponding definition:
 
-    %RT::ServiceBusinessHours = ( 'work just in Monday' => {
-        1 => { Name => 'Monday', Start => '9:00', End => '18:00' }
-    } );
+    %RT::ServiceBusinessHours = (
+        'work just in Monday' => {
+            1 => { Name => 'Monday', Start => '9:00', End => '18:00' },
+        },
+    );
 
 Default Business Hours setting is in $RT::ServiceBusinessHours{'Default'}.
 
-=head2 Default service levels
+=head2 Defining service levels per queue
 
-In the config and per queue defaults(this is not implemented).
+In the config you can set per queue defaults, using
+    %RT::ServiceAgreements = (
+        Default => 'global default level of service',
+        QueueDefault => {
+            'queue name' => 'default value for this queue',
+            ...
+        },
+        ...
+    };
+
+=head2 Access control
+
+You can totally hide SLA custom field from users and use per queue
+defaults, just revoke SeeCustomField and ModifyCustomField.
+
+If you want people to see the current service level ticket is assigned
+to then grant SeeCustomField right.
+
+You may want to allow customers or managers to escalate thier tickets.
+Just grant them ModifyCustomField right.
 
 =cut
 
@@ -346,7 +393,7 @@ sub GetDefaultServiceLevel {
 
     * default SLA for queues
     ** implemented
-    ** TODO: docs, tests
+    ** TODO: tests for options in the config
 
     * add support for multiple b-hours definitions, this could be very helpfull
       when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different
@@ -356,22 +403,33 @@ sub GetDefaultServiceLevel {
     ** TODO: tests
 
     * WebUI
+    ** not implemented
 
 =head1 DESIGN
 
 =head2 Classes
 
-Actions are subclasses of RT::Action::SLA class that is subclass of
-RT::Extension::SLA and RT::Action::Generic classes.
+Actions are subclasses of L<RT::Action::SLA> class that is subclass of
+L<RT::Extension::SLA> and L<RT::Action::Generic> classes.
 
-Conditions are subclasses of RT::Condition::SLA class that is subclass of
-RT::Extension::SLA and RT::Condition::Generic classes.
+Conditions are subclasses of L<RT::Condition::SLA> class that is subclass of
+L<RT::Extension::SLA> and L<RT::Condition::Generic> classes.
 
-RT::Extension::SLA is a base class for all classes in the extension,
-it provides access to config, generates B::Hours and B::SLA objects, and
+L<RT::Extension::SLA> is a base class for all classes in the extension,
+it provides access to config, generates L<Business::Hours> objects, and
 other things useful for whole extension. As this class is the base for
-all actions and conditions then we must avoid adding methods which overload
-methods in 'RT::{Condition,Action}::Generic' modules.
+all actions and conditions then we MUST avoid adding methods which overload
+methods in 'RT::{Condition,Action}::Generic' RT's modules.
+
+=head1 AUTHOR
+
+Ruslan Zakirov E<lt>ruz@bestpractical.comE<gt>
+
+=head1 COPYRIGHT
+
+This extension is Copyright (C) 2007-2008 Best Practical Solutions, LLC.
+
+It is freely redistributable under the terms of version 2 of the GNU GPL.
 
 =cut
 
