@@ -312,7 +312,9 @@ sub GetCustomField {
     unless ( $args{'Ticket'} ) {
         return RT::CustomField->new( $RT::SystemUser );
     }
-    return $args{'Ticket'}->QueueObj->CustomField( $args{'CustomField'} );
+    my $cfs = $args{'Ticket'}->QueueObj->TicketCustomFields;
+    $cfs->Limit( FIELD => 'Name', VALUE => $args{'CustomField'} );
+    return $cfs->First || RT::CustomField->new( $RT::SystemUser );
 }
 
 sub GetDefaultServiceLevel {
