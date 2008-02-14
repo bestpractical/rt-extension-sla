@@ -34,14 +34,8 @@ sub Commit {
     my $self = shift;
 
     my $ticket = $self->TicketObj;
-
-    my $level = $ticket->FirstCustomFieldValue('SLA');
-    unless ( $level ) {
-        $RT::Logger->debug('Ticket #'. $ticket->id .' has no service level defined');
-        return 1;
-    }
-
     my $txn = $self->TransactionObj;
+    my $level = $ticket->FirstCustomFieldValue('SLA');
 
     my $last_reply = $self->LastRequestorsEffectiveAct;
     $RT::Logger->debug('Last effective requestors\' reply to ticket #'. $ticket->id .' is txn #'. $last_reply->id )
