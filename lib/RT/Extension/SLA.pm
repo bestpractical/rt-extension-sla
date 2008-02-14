@@ -5,19 +5,16 @@ package RT::Extension::SLA;
 
 =head1 NAME
 
-RT::Extension::SLA - Service Level Agreements
-
-=head1 DESIGN QUESTIONS
-
-Here is some questionable things developers/users can comment on:
-
-=over 4
-
-=back
+RT::Extension::SLA - Service Level Agreements for RT
 
 =head1 DESCRIPTION
 
-To enable service level agreements for a queue administrtor
+RT's extension that allows you to automate due dates using
+service levels.
+
+=head1 CONFIGURATION
+
+To enable service level agreements for a queue administrator
 should create and apply SLA custom field. To define different
 levels for different queues he CAN create several CFs with
 the same name and different set of values. All CFs MUST be
@@ -26,7 +23,7 @@ of the same 'select one value' type.
 Values of the CF(s) define service levels.
 
 Each service level can be described using several options:
-StartImmediately, OutOfHours, Resolve and Response.
+L</StartImmediately>, L</OutOfHours>, L</Resolve> and L</Response>.
 
 =head2 StartImmediately (boolean, false)
 
@@ -137,7 +134,7 @@ A client orders goods and due date of the order is set to the next one
 hour, you have this hour to process the order and write a reply.
 As soon as goods are delivered you resolve tickets and usually meet
 Resolve deadline, but if you don't resolve or user replies then most
-probably there are problems with deliver or the goods. And if after
+probably there are problems with delivery of the goods. And if after
 a week you keep replying to the client and always meeting one hour
 response deadline that doesn't mean the ticket is not over due.
 Due date was frozen 24 hours after creation of the order.
@@ -145,8 +142,8 @@ Due date was frozen 24 hours after creation of the order.
 =head3 Using business and real time in one option
 
 It's quite rare situation when people need it, but we've decided
-that deadline described using both types of time then business
-is applied first and then real time. For example:
+that business is applied first and then real time when deadline
+described using both types of time. For example:
 
     'delivery' => {
         Resolve => { BusinessMinutes => 0, RealMinutes => 60*8 },
@@ -165,7 +162,8 @@ next 8 hours after creation.
 =head2 OutOfHours (struct, no default)
 
 Out of hours modifier. Adds more real or business minutes to resolve
-and/or reply options if event happens out of business hours.
+and/or reply options if event happens out of business hours, see also
+</BusinessHours> below.
 
 Example:
     
@@ -175,7 +173,7 @@ Example:
     },
 
 If a request comes into the system during night then supporters have two
-days, otherwise only one.
+hours, otherwise only one.
 
     'level x' => {
         OutOfHours => { Response => { BusinessMinutes => +60*2 } },
@@ -187,7 +185,23 @@ of requests that came into the system during the last night.
 
 =head2 BusinessHours
 
-Each level now supports BusinessHours option to specify your own business
+In the config you can set one or more work schedules. Use the following
+format:
+
+    %RT::BusinessHours = (
+        'label to use' => {
+            ... description ...
+        },
+        'another label' => {
+            ... description ...
+        },
+    );
+
+Read more about how to describe a schedule in L<Business::Hours>.
+
+=head3 Defining different business hours for service levels
+
+Each level supports BusinessHours option to specify your own business
 hours.
 
     'level x' => {
@@ -197,9 +211,9 @@ hours.
 
 then %RT::BusinessHours should have the corresponding definition:
 
-%RT::BusinessHours = ( 'work just in Monday' => {
+    %RT::BusinessHours = ( 'work just in Monday' => {
         1 => { Name => 'Monday', Start => '9:00', End => '18:00' }
-        });
+    } );
 
 Default Business Hours setting is in $RT::BusinessHours{'Default'}.
 
@@ -328,19 +342,18 @@ sub GetDefaultServiceLevel {
 
 =head1 TODO
 
-=head2 v0.01
+    * default SLA for queues
+    ** implemented
+    ** TODO: docs, tests
 
-* default SLA for queues
-** implemented
-** TODO: tests
+    * add support for multiple b-hours definitions, this could be very helpfull
+      when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different
+      tickets(by requestor, queue or something else). So people would be able to
+      handle tickets in the right order using Due dates.
+    ** implemented
+    ** TODO: tests
 
-* add support for multiple b-hours definitions, this could be very helpfull when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different tickets(by requestor, queue or something else). So people would be able to handle tickets in the right order using Due dates.
-** implemented
-** TODO: tests
-
-=head2 v0.later
-
-* WebUI
+    * WebUI
 
 =head1 DESIGN
 
