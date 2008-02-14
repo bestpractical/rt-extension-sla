@@ -9,6 +9,7 @@ require 't/utils.pl';
 
 use_ok 'RT';
 RT::LoadConfig();
+$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
 RT::Init();
 
 use_ok 'RT::Ticket';

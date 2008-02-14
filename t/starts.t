@@ -9,6 +9,12 @@ require 't/utils.pl';
 
 use_ok 'RT';
 RT::LoadConfig();
+$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
+
+# XXX, TODO
+# we assume the RT's Timezone is UTC now, need a smart way to get over that.
+$ENV{'TZ'} = $RT::Timezone = 'GMT';
+
 RT::Init();
 
 use_ok 'RT::Ticket';

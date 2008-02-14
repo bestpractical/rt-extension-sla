@@ -3,21 +3,25 @@
 use strict;
 use warnings;
 
+
 use Test::More tests => 9;
 
 require 't/utils.pl';
 
 use_ok 'RT';
 RT::LoadConfig();
+$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
+
+# XXX, TODO 
+# we assume the RT's Timezone is UTC now, need a smart way to get over that.
+$ENV{'TZ'} = $RT::Timezone = 'GMT';
+
 RT::Init();
 
 use_ok 'RT::Ticket';
 use_ok 'RT::Extension::SLA';
 
 use Test::MockTime qw( :all );
-
-# XXX, TODO 
-# we assume the RT's Timezone is UTC now, need a smart way to get over that.
 
 diag 'check business hours';
 {
