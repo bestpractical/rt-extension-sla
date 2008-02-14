@@ -16,7 +16,7 @@ use_ok 'RT::Extension::SLA';
 
 diag 'check change of Due date when SLA for a ticket is changed';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels => {
             '2' => { Resolve => { RealMinutes => 60*2 } },
@@ -48,7 +48,7 @@ diag 'check change of Due date when SLA for a ticket is changed';
 
 diag 'when not requestor creates a ticket, we dont set due date';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels => {
             '2' => { Response => { RealMinutes => 60*2 } },
@@ -71,7 +71,7 @@ diag 'when not requestor creates a ticket, we dont set due date';
 
 diag 'check that reply to requestors unset due date';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels => {
             '2' => { Response => { RealMinutes => 60*2 } },
@@ -169,7 +169,7 @@ diag 'check that reply to requestors unset due date';
 
 diag 'check that replies dont affect resolve deadlines';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels => {
             '2' => { Resolve => { RealMinutes => 60*2 } },
@@ -233,7 +233,7 @@ diag 'check that replies dont affect resolve deadlines';
 
 diag 'check that owner is not treated as requestor';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels => {
             '2' => { Response => { RealMinutes => 60*2 } },
@@ -266,7 +266,7 @@ diag 'check that owner is not treated as requestor';
 
 diag 'check that response deadline is left alone when there is no requestor';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels => {
             '2' => { Response => { RealMinutes => 60*2 } },

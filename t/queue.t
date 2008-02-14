@@ -36,7 +36,7 @@ diag 'check set of Due date with Queue default SLA';
     ok( $id, 'Created SLA Attribute for General' );
 
     no warnings 'once';
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => '2',
         Levels  => {
             '2' => { Resolve => { RealMinutes => 60 * 2 } },

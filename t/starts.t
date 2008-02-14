@@ -21,7 +21,7 @@ my $bhours = RT::Extension::SLA->BusinessHours;
 
 diag 'check Starts date';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => 'standard',
         Levels  => {
             'standard' => {
@@ -64,7 +64,7 @@ diag 'check Starts date';
 
 diag 'check Starts date with StartImmediately enabled';
 {
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => 'start immediately',
         Levels  => {
             'start immediately' => {

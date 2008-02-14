@@ -23,7 +23,7 @@ diag 'check business hours';
 {
 
     no warnings 'once';
-    %RT::SLA = (
+    %RT::ServiceAgreements = (
         Default => 'Sunday',
         Levels  => {
             Sunday => {

@@ -238,7 +238,7 @@ sub Agreement {
     my $self = shift;
     my %args = ( Level => undef, Type => 'Response', Time => undef, @_ );
 
-    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
+    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
     return undef unless $meta;
     return undef unless $meta->{ $args{'Type'} };
 
@@ -277,7 +277,7 @@ sub Due {
     my $agreement = $self->Agreement( %args );
     return undef unless $agreement;
 
-    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
+    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
 
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
@@ -294,7 +294,7 @@ sub Starts {
     my $self = shift;
     my %args = ( Level => undef, Time => undef, @_ );
 
-    my $meta = $RT::SLA{'Levels'}{ $args{'Level'} };
+    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
     return undef unless $meta;
 
     return $args{'Time'} if $meta->{'StartImmediately'};
@@ -333,11 +333,11 @@ sub GetDefaultServiceLevel {
         else {
             return $args{'Queue'}->SLA if $args{'Queue'}->SLA;
         }
-        if ( $RT::SLA{'QueueDefault'} && $RT::SLA{'QueueDefault'}{ $args{'Queue'}->Name } ) {
-            return $RT::SLA{'QueueDefault'}{ $args{'Queue'}->Name };
+        if ( $RT::ServiceAgreements{'QueueDefault'} && $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
+            return $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name };
         }
     }
-    return $RT::SLA{'Default'};
+    return $RT::ServiceAgreements{'Default'};
 }
 
 =head1 TODO
