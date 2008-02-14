@@ -30,7 +30,7 @@ diag 'check Starts date';
             },
         },
     );
-    %RT::BusinessHours = (
+    %RT::ServiceBusinessHours = (
         Default => {
             1 => {
                 Name  => 'Monday',

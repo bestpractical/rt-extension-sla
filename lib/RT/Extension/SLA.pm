@@ -188,7 +188,7 @@ of requests that came into the system during the last night.
 In the config you can set one or more work schedules. Use the following
 format:
 
-    %RT::BusinessHours = (
+    %RT::ServiceBusinessHours = (
         'label to use' => {
             ... description ...
         },
@@ -209,13 +209,13 @@ hours.
         Resolve    => { BusinessMinutes => 60 },
     },
 
-then %RT::BusinessHours should have the corresponding definition:
+then %RT::ServiceBusinessHours should have the corresponding definition:
 
-    %RT::BusinessHours = ( 'work just in Monday' => {
+    %RT::ServiceBusinessHours = ( 'work just in Monday' => {
         1 => { Name => 'Monday', Start => '9:00', End => '18:00' }
     } );
 
-Default Business Hours setting is in $RT::BusinessHours{'Default'}.
+Default Business Hours setting is in $RT::ServiceBusinessHours{'Default'}.
 
 =head2 Default service levels
 
@@ -229,8 +229,8 @@ sub BusinessHours {
 
     require Business::Hours;
     my $res = new Business::Hours;
-    $res->business_hours( %{ $RT::BusinessHours{ $name } } )
-        if $RT::BusinessHours{ $name };
+    $res->business_hours( %{ $RT::ServiceBusinessHours{ $name } } )
+        if $RT::ServiceBusinessHours{ $name };
     return $res;
 }
 

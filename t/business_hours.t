@@ -36,7 +36,7 @@ diag 'check business hours';
         },
     );
 
-    %RT::BusinessHours = (
+    %RT::ServiceBusinessHours = (
         Sunday => {
             0 => {
                 Name  => 'Sunday',
