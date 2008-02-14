@@ -1,5 +1,5 @@
 --- 
-abstract: RT Extension-SLA Extension
+abstract: Service Level Agreements for RT
 author: 
   - Ruslan Zakirov <ruz@bestpractical.com>
 build_requires: 
@@ -19,4 +19,4 @@ no_index:
 requires: 
   Business::Hours: 0
   perl: 5.8.0
-version: undef
+version: 0.01

@@ -1,5 +1,6 @@
 use inc::Module::Install;
 
+abstract('Service Level Agreements for RT');
 RTx ('RT-Extension-SLA');
 all_from('lib/RT/Extension/SLA.pm');
 license('gpl2');

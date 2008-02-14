@@ -4,6 +4,8 @@ use warnings;
 
 package RT::Extension::SLA;
 
+our $VERSION = '0.01';
+
 =head1 NAME
 
 RT::Extension::SLA - Service Level Agreements for RT
