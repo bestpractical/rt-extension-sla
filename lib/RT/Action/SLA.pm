@@ -22,7 +22,7 @@ sub SetDateField {
     my $date = RT::Date->new( $RT::SystemUser );
     $date->Set( Format => 'unix', Value => $value );
 
-    my $method = 'Set'. $type;
+    $method = 'Set'. $type;
     my ($status, $msg) = $ticket->$method( $date->ISO );
     unless ( $status ) {
         $RT::Logger->error("Couldn't set $type date: $msg");
