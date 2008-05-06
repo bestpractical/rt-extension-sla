@@ -6,6 +6,24 @@ package RT::Action::SLA;
 
 use base qw(RT::Extension::SLA RT::Action::Generic);
 
+=head1 NAME
+
+RT::Action::SLA - base class for all actions in the extension
+
+=head1 DESCRIPTION
+
+It's not a real action, but container for subclassing which provide
+help methods for other actions.
+
+=head1 METHODS
+
+=head2 SetDateField NAME VALUE
+
+Sets specified ticket's date field to the value, doesn't update
+if field is set already. VALUE is unix time.
+
+=cut
+
 sub SetDateField {
     my $self = shift;
     my ($type, $value) = (@_);

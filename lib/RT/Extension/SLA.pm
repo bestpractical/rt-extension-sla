@@ -48,7 +48,7 @@ L<StartImmediately|/"StartImmediately (boolean, false)">,
 L<Resolve|/"Resolve and Response (interval, no defaults)">,
 L<Response|/"Resolve and Response (interval, no defaults)">,
 L<OutOfHours|/"OutOfHours (struct, no default)">
-and L</BusinessHours>.
+and L<ServiceBusinessHours|/"Configuring business hours">.
 
 =head2 StartImmediately (boolean, false)
 
@@ -64,6 +64,7 @@ to Created time. In this case you can set option
 StartImmediately to true value.
 
 Example:
+
     '24/7' => {
         StartImmediately => 1,
         Response => { RealMinutes => 30 },
@@ -89,12 +90,12 @@ Defines deadline when a ticket should be resolved. This option is
 quite simple and straightforward when used without L</Response>.
 
 Example:
+
     # 8 business hours
     'simple' => { Resolve => 60*8 },
     ...
     # one real week
     'hard' => { Resolve => { RealMinutes => 60*24*7 } },
-
 
 =head3 Response
 
@@ -249,7 +250,8 @@ Default Business Hours setting is in $RT::ServiceBusinessHours{'Default'}.
 
 =head2 Defining service levels per queue
 
-In the config you can set per queue defaults, using
+In the config you can set per queue defaults, using:
+
     %RT::ServiceAgreements = (
         Default => 'global default level of service',
         QueueDefault => {

@@ -8,7 +8,7 @@ use base qw(RT::Action::SLA);
 
 =head1 NAME
 
-RT::Action::SLA::SetDefault - set default SLA value
+RT::Action::SLA_SetDefault - set default SLA value
 
 =head1 DESCRIPTION
 
