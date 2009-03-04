@@ -12,21 +12,34 @@ RT::Extension::SLA - Service Level Agreements for RT
 
 =head1 DESCRIPTION
 
-RT's extension that allows you to automate due dates using
-service levels.
+RT extension to implement automated due dates using service levels.
+
+=head1 INSTALL
+
+=over 4
+
+=item perl Makefile.PL
+
+=item make
+
+=item make install
+
+=item make initdb (for the first time only)
+
+=back
 
 =head1 CONFIGURATION
 
-Service level agreements of tickets is controlled by SLA custom
-field. It's created during `make initdb` step and applied globally.
-This CF MUST be of 'select one value' type. Values of the CF
-define service levels.
+Service level agreements of tickets is controlled by an SLA custom field (CF).
+This field is created during C<make initdb> step (above) and applied globally.
+This CF MUST be of C<select one value> type. Values of the CF define the
+service levels.
 
 It's possible to define different set of levels for different
 queues. You can create several CFs with the same name and
 different set of values. But if you move tickets between
-queues a lot then it's gonna be a problem and it's preferred
-to use ONE SLA custom field.
+queues a lot then it's going to be a problem and it's preferred
+to use B<ONE> SLA custom field.
 
 There is no WebUI in the current version. Almost everything is
 controlled in the RT's config using option C<%RT::ServiceAgreements>
@@ -43,6 +56,9 @@ and C<%RT::ServiceBusinessHours>. For example:
         },
     );
 
+In this example I<Incident> is the name of the queue, and I<2h> is the name of
+the SLA which will be applied to this queue by default.
+
 Each service level can be described using several options:
 L<StartImmediately|/"StartImmediately (boolean, false)">,
 L<Resolve|/"Resolve and Response (interval, no defaults)">,
@@ -52,16 +68,16 @@ and L<ServiceBusinessHours|/"Configuring business hours">.
 
 =head2 StartImmediately (boolean, false)
 
-By default when ticket is created Starts date is set to
+By default when a ticket is created Starts date is set to
 first business minute after time of creation. In other
-words if ticket is created during business hours then
-Starts will be equal to Created time, otherwise it'll
+words if a ticket is created during business hours then
+Starts will be equal to Created time, otherwise Starts will
 be beginning of the next business day.
 
 However, if you provide 24/7 support then you most
 probably would be interested in Starts to be always equal
 to Created time. In this case you can set option
-StartImmediately to true value.
+StartImmediately to a true value.
 
 Example:
 
@@ -143,7 +159,7 @@ Resolve and Response can be combined. In such case due date is set
 according to the earliest of two deadlines and never is dropped to
 'not set'.
 
-If a ticket met its Resolve deadline then due date stops "fliping",
+If a ticket met its Resolve deadline then due date stops "flipping",
 is freezed and the ticket becomes overdue. Before that moment when
 non-requestor replies to a ticket, due date is changed to Resolve
 deadline instead of 'Not Set', as well this happens when a ticket
@@ -425,13 +441,19 @@ other things useful for whole extension. As this class is the base for
 all actions and conditions then we MUST avoid adding methods which overload
 methods in 'RT::{Condition,Action}::Generic' RT's modules.
 
+=head1 NOTES
+
+If you run C<make initdb> more than once you will create multiple SLA CFs.  You
+can remove these via RT's C<Configuration-E<gt>Global> menu, (both Custom Fields
+and Scrips).
+
 =head1 AUTHOR
 
 Ruslan Zakirov E<lt>ruz@bestpractical.comE<gt>
 
 =head1 COPYRIGHT
 
-This extension is Copyright (C) 2007-2008 Best Practical Solutions, LLC.
+This extension is Copyright (C) 2007-2009 Best Practical Solutions, LLC.
 
 It is freely redistributable under the terms of version 2 of the GNU GPL.
 
