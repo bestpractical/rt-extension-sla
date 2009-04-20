@@ -37,16 +37,17 @@ sub Commit {
     my $txn = $self->TransactionObj;
     my $level = $ticket->FirstCustomFieldValue('SLA');
 
-    my $last_reply = $self->LastRequestorsEffectiveAct;
-    $RT::Logger->debug('Last effective requestors\' reply to ticket #'. $ticket->id .' is txn #'. $last_reply->id )
-        if $last_reply;
+    my ($last_reply, $is_requestor) = $self->LastEffectiveAct;
+    $RT::Logger->debug(
+        'Last effective '. ($is_requestor? '':'non-') .'requestors\' reply'
+        .' to ticket #'. $ticket->id .' is txn #'. $last_reply->id
+    );
 
-    my $response_due;
-    $response_due = $self->Due(
+    my $response_due = $self->Due(
         Level => $level,
-        Type => 'Response',
+        Type => $is_requestor? 'Response': 'KeepInLoop',
         Time => $last_reply->CreatedObj->Unix,
-    ) if $last_reply;
+    );
 
     my $resolve_due = $self->Due(
         Level => $level,
@@ -74,7 +75,7 @@ sub IsRequestorsAct {
     return $self->TicketObj->Requestors->HasMemberRecursively( $actor )? 1 : 0;
 }
 
-sub LastRequestorsEffectiveAct {
+sub LastEffectiveAct {
     my $self = shift;
 
     my $txns = $self->TicketObj->Transactions;
@@ -87,10 +88,13 @@ sub LastRequestorsEffectiveAct {
 
     my $res;
     while ( my $txn = $txns->Next ) {
-        return $res unless $self->IsRequestorsAct( $txn );
+        unless ( $self->IsRequestorsAct( $txn ) ) {
+            last if $res;
+            return ($txn);
+        }
         $res = $txn;
     }
-    return $res;
+    return ($res, 'requestor');
 }
 
 1;
