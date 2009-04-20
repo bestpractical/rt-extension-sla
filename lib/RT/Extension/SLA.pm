@@ -63,6 +63,7 @@ Each service level can be described using several options:
 L<StartImmediately|/"StartImmediately (boolean, false)">,
 L<Resolve|/"Resolve and Response (interval, no defaults)">,
 L<Response|/"Resolve and Response (interval, no defaults)">,
+L<KeepInLoop|/"Keep in loop (interval, no defaults)">,
 L<OutOfHours|/"OutOfHours (struct, no default)">
 and L<ServiceBusinessHours|/"Configuring business hours">.
 
@@ -200,6 +201,23 @@ hours these levels define the same deadlines, otherwise the first
 level set deadline to 8 real hours starting from the next business
 day, when tickets with the second level should be resolved in the
 next 8 hours after creation.
+
+=head2 Keep in loop (interval, no defaults)
+
+If response deadline is used then Due date is changed to repsonse
+deadline or to "Not Set" when staff replies to a ticket. In some
+cases you want to keep requestors in loop and keed them up to date
+every few hours. KeepInLoop option can be used to achieve this.
+
+    'incident' => {
+        Response   => { RealMinutes => 60*1  }, # one hour
+        KeepInLoop => { RealMinutes => 60*2 }, # two hours
+        Resolve    => { RealMinutes => 60*24 }, # 24 real hours
+    },
+
+In the above example Due is set to one hour after creation, reply
+of a non-requestor moves Due date two hours forward, requestors'
+replies move Due date to one hour and resolve deadine is 24 hours.
 
 =head2 OutOfHours (struct, no default)
 
@@ -411,19 +429,15 @@ sub GetDefaultServiceLevel {
 
 =head1 TODO
 
-    * default SLA for queues
-    ** implemented
-    ** TODO: tests for options in the config
+    * [implemented, TODO: tests for options in the config] default SLA for queues
 
-    * add support for multiple b-hours definitions, this could be very helpfull
-      when you have 24/7 mixed with 8/5 and/or something like 8/5+4/2 for different
-      tickets(by requestor, queue or something else). So people would be able to
-      handle tickets in the right order using Due dates.
-    ** implemented
-    ** TODO: tests
+    * [implemented, TODO: tests] add support for multiple b-hours definitions,
+      this could be very helpfull when you have 24/7 mixed with 8/5 and/or
+      something like 8/5+4/2 for different tickets(by requestor, queue or
+      something else). So people would be able to handle tickets in the right
+      order using Due dates.
 
-    * WebUI
-    ** not implemented
+    * [not implemented] WebUI
 
 =head1 DESIGN
 
