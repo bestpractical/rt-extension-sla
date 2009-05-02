@@ -14,6 +14,14 @@ RT::Extension::SLA - Service Level Agreements for RT
 
 RT extension to implement automated due dates using service levels.
 
+=head1 UPGRADING
+
+On upgrade you shouldn't run 'make initdb'.
+
+If you were using 0.02 or older version of this extension with
+RT 3.8.1 then you have to uninstall that manually. List of files
+you can find in the MANIFEST.
+
 =head1 INSTALLATION
 
 =over
@@ -80,7 +88,7 @@ There is no WebUI in the current version. Almost everything is
 controlled in the RT's config using option C<%RT::ServiceAgreements>
 and C<%RT::ServiceBusinessHours>. For example:
 
-    %RT::ServiceAgreements = (
+    Set( %ServiceAgreements,
         Default => '4h',
         QueueDefault => {
             'Incident' => '2h',
@@ -321,7 +329,7 @@ arbitrarily, which could wreak havoc on your SLA performance.
 In the config you can set one or more work schedules. Use the following
 format:
 
-    %RT::ServiceBusinessHours = (
+    Set( %ServiceBusinessHours,
         'Default' => {
             ... description ...
         },
@@ -347,7 +355,7 @@ hours.
 
 then %RT::ServiceBusinessHours should have the corresponding definition:
 
-    %RT::ServiceBusinessHours = (
+    Set( %ServiceBusinessHours,
         'work just in Monday' => {
             1 => { Name => 'Monday', Start => '9:00', End => '18:00' },
         },
@@ -359,14 +367,14 @@ Default Business Hours setting is in $RT::ServiceBusinessHours{'Default'}.
 
 In the config you can set per queue defaults, using:
 
-    %RT::ServiceAgreements = (
+    Set( %ServiceAgreements,
         Default => 'global default level of service',
         QueueDefault => {
             'queue name' => 'default value for this queue',
             ...
         },
         ...
-    };
+    );
 
 =head2 Access control
 
@@ -540,6 +548,12 @@ sub GetDefaultServiceLevel {
         }
     }
     return $RT::ServiceAgreements{'Default'};
+}
+
+sub ReportOnTicket {
+    my $self = shift;
+    my $id = shift;
+
 }
 
 =head1 TODO
