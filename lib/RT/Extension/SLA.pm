@@ -435,10 +435,12 @@ sub GetDefaultServiceLevel {
     return $RT::ServiceAgreements{'Default'};
 }
 
-sub ReportOnTicket {
+sub Report {
     my $self = shift;
-    my $id = shift;
+    my $ticket = shift;
 
+    require RT::Extension::SLA::Report;
+    return RT::Extension::SLA::Report->new( Ticket => $ticket )->Run;
 }
 
 =head1 TODO and CAVEATS
