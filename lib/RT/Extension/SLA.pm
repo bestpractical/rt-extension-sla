@@ -441,7 +441,20 @@ sub ReportOnTicket {
 
 }
 
-=head1 TODO
+=head1 TODO and CAVEATS
+
+    * [not implemented] KeepInLoop and Response deadlines need adjusting. For example
+      KeepInLoop is 2h and Response is 2h as well. Owner replies at point 0, deadline
+      is 2h, at 1h requestor replies with anything -> deadline is moved according to
+      response deadline to 3h when it must stay at 2h waiting for KeepInLoop follow up
+      from owner and then move to another KeepInLoop deadline at 4h.
+
+    * [not implemented] Manually entered Due date should be treated as Resolve deadline.
+      We should store it and use later, so this module can be used for projects. For
+      example: Response 4 hours, KeepInLoop 1 day, Resolve 5 b.days; these are defaults,
+      but any manual change to Due date changes Resolve deadline.
+
+    * [not implemented] WebUI
 
     * [implemented, TODO: tests for options in the config] default SLA for queues
 
@@ -450,8 +463,6 @@ sub ReportOnTicket {
       something like 8/5+4/2 for different tickets(by requestor, queue or
       something else). So people would be able to handle tickets in the right
       order using Due dates.
-
-    * [not implemented] WebUI
 
 =head1 DESIGN
 
