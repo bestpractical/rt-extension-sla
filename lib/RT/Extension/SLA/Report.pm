@@ -19,36 +19,6 @@ sub init {
     return $self;
 }
 
-sub State {
-    my $self = shift;
-    return $self->{State};
-}
-
-sub Stats {
-    my $self = shift;
-    return $self->{Stats};
-}
-
-{ my $cache;
-sub Handlers {
-    my $self = shift;
-
-    return $cache if $cache;
-    
-    $cache = {
-        Create => 'OnCreate',
-        Set    => {
-            Owner => 'OnOwnerChange',
-        },
-        Correspond => 'OnResponse',
-        CustomField => { map $_ => 'OnServiceLevelChange', $self->ServiceLevelCustomFields },
-        AddWatcher => { Requestor => 'OnRequestorChange' },
-        DelWatcher => { Requestor => 'OnRequestorChange' },
-    };
-
-    return $cache;
-} }
-
 sub Run {
     my $self = shift;
     my $txns = shift || $self->{'Ticket'}->Transactions;
@@ -74,16 +44,49 @@ sub Run {
     return $self;
 }
 
+sub State {
+    my $self = shift;
+    return $self->{State};
+}
+
+sub Stats {
+    my $self = shift;
+    return $self->{Stats};
+}
+
+{ my $cache;
+sub Handlers {
+    my $self = shift;
+
+    return $cache if $cache;
+    
+    $cache = {
+        Create => 'OnCreate',
+        Set    => {
+            Owner => 'OnOwnerChange',
+        },
+        Correspond => 'OnResponse',
+        CustomField => { map { $_->id => 'OnServiceLevelChange' } $self->ServiceLevelCustomFields },
+        AddWatcher => { Requestor => 'OnRequestorChange' },
+        DelWatcher => { Requestor => 'OnRequestorChange' },
+    };
+
+    use Data::Dumper;
+    Test::More::diag( Dumper $cache );
+
+    return $cache;
+} }
+
 sub OnCreate {
     my $self = shift;
     my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
 
     my $state = $args{'State'};
     %$state = ();
-    $state->{'level'} = $self->InitialServiceLevel( $args{'Ticket'} );
-    $state->{'requestors'} = [ $self->InitialRequestors( $args{'Ticket'} ) ];
-    $state->{'owner'} = $self->InitialOwner( $args{'Ticket'} );
-    return;
+    $state->{'level'} = $self->InitialServiceLevel( Ticket => $args{'Ticket'} );
+    $state->{'requestors'} = [ $self->InitialRequestors( Ticket => $args{'Ticket'} ) ];
+    $state->{'owner'} = $self->InitialOwner( Ticket => $args{'Ticket'} );
+    return $self->OnResponse( %args );
 }
 
 sub OnRequestorChange {
@@ -100,15 +103,21 @@ sub OnRequestorChange {
     }
 }
 
+sub OnServiceLevelChange {
+    my $self = shift;
+    my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
+    $self->State->{'level'} = $args{'Transaction'}->NewValue;
+}
+
 sub OnResponse {
     my $self = shift;
     my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
 
     my $txn = $args{'Transaction'};
-    unless ( $args{'State'}->{'level'} ) {
-        $RT::Logger->debug('No service level -> ignore txn #'. $txn->id );
-        return;
-    }
+#    unless ( $args{'State'}->{'level'} ) {
+#        $RT::Logger->debug('No service level -> ignore txn #'. $txn->id );
+#        return;
+#    }
 
     my $act = $args{'State'}->{'act'};
     if ( $self->IsRequestorsAct( $txn ) ) {
@@ -143,6 +152,7 @@ sub OnResponse {
                 owner     => $args{'State'}->{'owner'},
                 failed    => $failed,
                 owner_act => $owner,
+                actor     => $txn->Creator,
                 shift     => $txn->CreatedObj->Unix - $deadline,                
             };
             push @{ $self->Stats }, $stat;
@@ -152,22 +162,25 @@ sub OnResponse {
             my $deadline = RT::Extension::SLA->Due(
                 Type  => 'Response',
                 Level => $args{'State'}->{'level'},
-                Time  => $args{'State'}->{'acted'},
+                Time  => $args{'State'}->{'act'}->{'acted'},
             );
             unless ( defined $deadline ) {
                 $RT::Logger->debug( "Non-requestors' reply after requestors', without response deadline");
                 return;
             }
 
+            Test::More::diag( 'deadline '. $deadline .' '. Dumper( $args{'State'} ) );
+
             # repsonse
             my $failed = $txn->CreatedObj->Unix > $deadline? 1 : 0;
             my $owner = $args{'State'}->{'owner'} == $txn->Creator? 1 : 0;
             my $stat = {
-                type      => 'KeepInLoop',
+                type      => 'Response',
                 owner     => $args{'State'}->{'owner'},
                 failed    => $failed,
                 owner_act => $owner,
-                shift     => $txn->CreatedObj->Unix - $deadline,                
+                actor     => $txn->Creator,
+                shift     => ($txn->CreatedObj->Unix - $deadline),
             };
             push @{ $self->Stats }, $stat;
         }
@@ -195,23 +208,23 @@ sub IsRequestorsAct {
 
 sub InitialServiceLevel {
     my $self = shift;
-    my $ticket = shift;
+    my %args = @_;
 
     return $self->InitialValue(
-        Ticket   => $ticket,
-        Current  => $ticket->FirstCustomFieldValue('SLA'),
+        Ticket   => $args{'Ticket'},
+        Current  => $args{'Ticket'}->FirstCustomFieldValue('SLA'),
         Criteria => { CustomField => [ map $_->id, $self->ServiceLevelCustomFields ] },
     );
 }
 
 sub InitialRequestors {
     my $self = shift;
-    my $ticket = shift;
+    my %args = @_;
 
-    my @current = map $_->Member, @{ $ticket->Requestors->MembersObj->ItemsArrayRef };
+    my @current = map $_->MemberId, @{ $args{'Ticket'}->Requestors->MembersObj->ItemsArrayRef };
 
     my $txns = $self->Transactions(
-        Ticket => $ticket,
+        Ticket => $args{'Ticket'},
         Order => 'DESC',
         Criteria => { 'AddWatcher' => 'Requestor', DelWatcher => 'Requestor' },
     );
@@ -302,9 +315,7 @@ sub ServiceLevelCustomFields {
     $cfs->Limit( FIELD => 'LookupType', VALUE => RT::Ticket->CustomFieldLookupType );
     # XXX: limit to applied custom fields only
 
-    push @cache, $_ while $_ = $cfs->Next;
-
-    return @cache;
+    return @cache = @{ $cfs->ItemsArrayRef };
 } }
 
 1;
