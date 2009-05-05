@@ -1,6 +1,8 @@
 Changes
 etc/initialdata
 etc/upgrade/0.06/content
+html/Callbacks/RT-Extension-SLA/Tools/Reports/Elements/Tabs/Default
+html/Tools/Reports/SLA.html
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -25,6 +27,8 @@ lib/RT/Condition/SLA_RequireDefault.pm
 lib/RT/Condition/SLA_RequireDueSet.pm
 lib/RT/Condition/SLA_RequireStartsSet.pm
 lib/RT/Extension/SLA.pm
+lib/RT/Extension/SLA/Report.pm
+lib/RT/Extension/SLA/Summary.pm
 lib/RT/Extension/SLA/Test.pm.in
 lib/RT/Queue_SLA.pm
 Makefile.PL
@@ -37,5 +41,6 @@ t/business_hours.t
 t/due.t
 t/ignore-on-statuses.t
 t/queue.t
+t/reporting/basic.t
 t/starts.t
 t/timezone.t

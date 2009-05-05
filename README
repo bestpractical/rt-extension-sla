@@ -4,6 +4,13 @@ NAME
 DESCRIPTION
     RT extension to implement automated due dates using service levels.
 
+UPGRADING
+    On upgrade you shouldn't run 'make initdb'.
+
+    If you were using 0.02 or older version of this extension with RT 3.8.1
+    then you have to uninstall that manually. List of files you can find in
+    the MANIFEST.
+
 INSTALLATION
     "perl Makefile.PL"
     "make"
@@ -58,7 +65,7 @@ CONFIGURATION
     controlled in the RT's config using option %RT::ServiceAgreements and
     %RT::ServiceBusinessHours. For example:
 
-        %RT::ServiceAgreements = (
+        Set( %ServiceAgreements,
             Default => '4h',
             QueueDefault => {
                 'Incident' => '2h',
@@ -269,7 +276,7 @@ CONFIGURATION
     In the config you can set one or more work schedules. Use the following
     format:
 
-        %RT::ServiceBusinessHours = (
+        Set( %ServiceBusinessHours,
             'Default' => {
                 ... description ...
             },
@@ -294,7 +301,7 @@ CONFIGURATION
 
     then %RT::ServiceBusinessHours should have the corresponding definition:
 
-        %RT::ServiceBusinessHours = (
+        Set( %ServiceBusinessHours,
             'work just in Monday' => {
                 1 => { Name => 'Monday', Start => '9:00', End => '18:00' },
             },
@@ -306,14 +313,14 @@ CONFIGURATION
   Defining service levels per queue
     In the config you can set per queue defaults, using:
 
-        %RT::ServiceAgreements = (
+        Set( %ServiceAgreements,
             Default => 'global default level of service',
             QueueDefault => {
                 'queue name' => 'default value for this queue',
                 ...
             },
             ...
-        };
+        );
 
   Access control
     You can totally hide SLA custom field from users and use per queue
@@ -325,7 +332,20 @@ CONFIGURATION
     You may want to allow customers or managers to escalate thier tickets.
     Just grant them ModifyCustomField right.
 
-TODO
+TODO and CAVEATS
+        * [not implemented] KeepInLoop and Response deadlines need adjusting. For example
+          KeepInLoop is 2h and Response is 2h as well. Owner replies at point 0, deadline
+          is 2h, at 1h requestor replies with anything -> deadline is moved according to
+          response deadline to 3h when it must stay at 2h waiting for KeepInLoop follow up
+          from owner and then move to another KeepInLoop deadline at 4h.
+
+        * [not implemented] Manually entered Due date should be treated as Resolve deadline.
+          We should store it and use later, so this module can be used for projects. For
+          example: Response 4 hours, KeepInLoop 1 day, Resolve 5 b.days; these are defaults,
+          but any manual change to Due date changes Resolve deadline.
+
+        * [not implemented] WebUI
+
         * [implemented, TODO: tests for options in the config] default SLA for queues
 
         * [implemented, TODO: tests] add support for multiple b-hours definitions,
@@ -333,8 +353,6 @@ TODO
           something like 8/5+4/2 for different tickets(by requestor, queue or
           something else). So people would be able to handle tickets in the right
           order using Due dates.
-
-        * [not implemented] WebUI
 
 DESIGN
   Classes

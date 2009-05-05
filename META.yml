@@ -26,4 +26,4 @@ requires:
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/gpl-2.0.php
-version: '0.08'
+version: 0.08_01
