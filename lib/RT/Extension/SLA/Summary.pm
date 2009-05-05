@@ -20,6 +20,18 @@ sub Result {
     return $self->{'Result'} ||= { };
 }
 
+our @known_stats = (
+    'passed' => ['Passed', 'Replied before a deadline'],
+    'failed' => ['Failed', 'Replied after a deadline or not replied at all'],
+    'helped' => ['Helped', 'Helped another user to reach a deadline'],
+    'late help' => ['Helped (late)', 'Helped another user, however failed a deadline'],
+    'got help'  => ['Got help', 'Got help from another user within a deadline'],
+);
+
+sub Labels {
+    return @known_stats;
+}
+
 sub AddReport {
     my $self = shift;
     my $report = shift;
