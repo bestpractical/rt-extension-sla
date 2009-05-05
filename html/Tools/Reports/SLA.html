@@ -12,8 +12,10 @@
 </tr>
 
 % while ( my ($owner, $stats) = each %$result ) {
+% my $user = RT::User->new( $session{'CurrentUser'} );
+% $user->Load( $owner );
 <tr>
-<td><% $owner %></td>
+<td><& /Elements/ShowUser, User => $user &></td>
 % my $i = 1;
 % foreach ( map $stats->{ $_ }, grep $i++%2, @columns ) {
 <td><% $_ || 0 %></td>
@@ -21,6 +23,11 @@
 </tr>
 % }
 </table>
+
+<form method="post" action="SLA.html">
+<&|/l&>Query</&>:<textarea cols="60" rows="20" name="Query"><% $Query %></textarea>
+<& /Elements/Submit, Label => loc('Update report') &>
+</form>
 
 <%ARGS>
 $Query => undef
