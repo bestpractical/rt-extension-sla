@@ -12,12 +12,13 @@
 </tr>
 
 % while ( my ($owner, $stats) = each %$result ) {
-    <tr><td><% $owner %><td>
+<tr>
+<td><% $owner %></td>
 % my $i = 1;
 % foreach ( map $stats->{ $_ }, grep $i++%2, @columns ) {
 <td><% $_ || 0 %></td>
 % }
-    </tr>
+</tr>
 % }
 </table>
 
@@ -34,10 +35,9 @@ my $tickets = RT::Tickets->new( $session{'CurrentUser'} );
 $tickets->FromSQL( $Query );
 $tickets->OrderByCols( {FIELD => 'id', ORDER => 'ASC'} );
 while ( my $ticket = $tickets->Next ) {
-    my $report = RT::Extension::SLA->Report( Ticket => $ticket );
+    my $report = RT::Extension::SLA->Report( $ticket );
     $summary->AddReport( $report );
 }
 
 my $result = $summary->Result;
-
 </%INIT>
