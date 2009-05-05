@@ -39,6 +39,8 @@ sub Run {
         }
         next unless $h;
 
+        $RT::Logger->debug( "Handling transaction #". $txn->id ." ($type, $field) of ticket #". $self->{'Ticket'}->id );
+
         $self->$h( Ticket => $self->{'Ticket'}, Transaction => $txn, State => $state );
     }
     return $self;
@@ -70,9 +72,6 @@ sub Handlers {
         AddWatcher => { Requestor => 'OnRequestorChange' },
         DelWatcher => { Requestor => 'OnRequestorChange' },
     };
-
-    use Data::Dumper;
-    Test::More::diag( Dumper $cache );
 
     return $cache;
 } }
@@ -131,7 +130,10 @@ sub OnResponse {
         $act->{'acted'} = $txn->CreatedObj->Unix;
     } else {
         unless ( $act ) {
-            die "not yet implemented";
+            $act = $args{'State'}->{'act'} = {};
+            $act->{'requestor'} = 0;
+            $act->{'acted'} = $txn->CreatedObj->Unix;
+            return;
         }
         unless ( $act->{'requestor'} ) {
             # check keep in loop
@@ -168,8 +170,6 @@ sub OnResponse {
                 $RT::Logger->debug( "Non-requestors' reply after requestors', without response deadline");
                 return;
             }
-
-            Test::More::diag( 'deadline '. $deadline .' '. Dumper( $args{'State'} ) );
 
             # repsonse
             my $failed = $txn->CreatedObj->Unix > $deadline? 1 : 0;
