@@ -1,0 +1,43 @@
+<& /Elements/Header, Title => $title &>
+<& /Tools/Reports/Elements/Tabs, current_tab => 'Tools/Reports/SLA.html', Title => $title &>
+
+<table>
+<tr>
+<th><% loc('Owner') %></th>
+% my @columns = $summary->Labels;
+% my $i = 0;
+% foreach ( map $_->[0], grep $i++%2, @columns ) {
+<th><% loc($_) %></th>
+% }
+</tr>
+
+% while ( my ($owner, $stats) = each %$result ) {
+    <tr><td><% $owner %><td>
+% my $i = 1;
+% foreach ( map $stats->{ $_ }, grep $i++%2, @columns ) {
+<td><% $_ || 0 %></td>
+% }
+    </tr>
+% }
+</table>
+
+<%ARGS>
+$Query => undef
+</%ARGS>
+<%INIT>
+my $title = loc("Report on Service Level Agreements");
+
+use RT::Extension::SLA::Summary;
+my $summary = new RT::Extension::SLA::Summary;
+
+my $tickets = RT::Tickets->new( $session{'CurrentUser'} );
+$tickets->FromSQL( $Query );
+$tickets->OrderByCols( {FIELD => 'id', ORDER => 'ASC'} );
+while ( my $ticket = $tickets->Next ) {
+    my $report = RT::Extension::SLA->Report( Ticket => $ticket );
+    $summary->AddReport( $report );
+}
+
+my $result = $summary->Result;
+
+</%INIT>
