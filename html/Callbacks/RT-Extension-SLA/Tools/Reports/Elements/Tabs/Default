@@ -1,0 +1,9 @@
+<%ARGS>
+$tabs => {}
+</%ARGS>
+<%INIT>
+$tabs->{'s'} = {
+    title => loc('Service Level Aggreements'),
+    path  => 'Tools/Reports/SLA.html',
+};
+</%INIT>

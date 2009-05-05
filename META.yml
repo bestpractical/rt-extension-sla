@@ -18,6 +18,7 @@ name: RT-Extension-SLA
 no_index:
   directory:
     - etc
+    - html
     - inc
     - t
 requires:
