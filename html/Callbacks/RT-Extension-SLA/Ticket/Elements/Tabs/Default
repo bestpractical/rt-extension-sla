@@ -1,0 +1,15 @@
+<%ARGS>
+$Query => undef
+$tabs => {}
+</%ARGS>
+<%INIT>
+
+$Query ||= $session{'CurrentSearchHash'}->{'Query'};
+
+return unless $Query;
+
+$tabs->{"m"} = {
+    path  => "Tools/Reports/SLA.html?". $m->comp( '/Elements/QueryString', Query => $Query ),
+    title => loc('Report SLA'),
+};
+</%INIT>
