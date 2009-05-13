@@ -33,6 +33,14 @@
 $Query => undef
 </%ARGS>
 <%INIT>
+unless (
+    $session{'CurrentUser'}->PrincipalObj->HasRight(
+        Object => $RT::System, Right => 'SeeSLAReports',
+    )
+) {
+    Abort("You're not allowed to see SLA reports.");
+}
+
 my $title = loc("Report on Service Level Agreements");
 
 use RT::Extension::SLA::Summary;

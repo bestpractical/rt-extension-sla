@@ -316,6 +316,14 @@ Just grant them ModifyCustomField right.
 
 =cut
 
+{
+    my $right = 'SeeSLAReports';
+    use RT::System;
+    $RT::System::Rights->{$right} = 'See service level performance reports';
+    use RT::ACE;
+    $RT::ACE::LOWERCASERIGHTNAMES{ lc $right } = $right;
+}
+
 sub BusinessHours {
     my $self = shift;
     my $name = shift || 'Default';
