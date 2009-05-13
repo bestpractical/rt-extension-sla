@@ -2,6 +2,9 @@
 $tabs => {}
 </%ARGS>
 <%INIT>
+return unless $session{'CurrentUser'}->PrincipalObj->HasRight(
+    Object => $RT::System, Right => 'SeeSLAReports',
+);
 $tabs->{'s'} = {
     title => loc('Service Level Aggreements'),
     path  => 'Tools/Reports/SLA.html',
