@@ -150,12 +150,13 @@ sub OnResponse {
             my $failed = $txn->CreatedObj->Unix > $deadline? 1 : 0;
             my $owner = $args{'State'}->{'owner'} == $txn->Creator? 1 : 0;
             my $stat = {
-                type      => 'KeepInLoop',
-                owner     => $args{'State'}->{'owner'},
-                failed    => $failed,
-                owner_act => $owner,
-                actor     => $txn->Creator,
-                shift     => $txn->CreatedObj->Unix - $deadline,                
+                type        => 'KeepInLoop',
+                owner       => $args{'State'}->{'owner'},
+                failed      => $failed,
+                owner_act   => $owner,
+                transaction => $txn,
+                actor       => $txn->Creator,
+                shift       => $txn->CreatedObj->Unix - $deadline,                
             };
             push @{ $self->Stats }, $stat;
         }
@@ -175,12 +176,13 @@ sub OnResponse {
             my $failed = $txn->CreatedObj->Unix > $deadline? 1 : 0;
             my $owner = $args{'State'}->{'owner'} == $txn->Creator? 1 : 0;
             my $stat = {
-                type      => 'Response',
-                owner     => $args{'State'}->{'owner'},
-                failed    => $failed,
-                owner_act => $owner,
-                actor     => $txn->Creator,
-                shift     => ($txn->CreatedObj->Unix - $deadline),
+                type        => 'Response',
+                owner       => $args{'State'}->{'owner'},
+                failed      => $failed,
+                owner_act   => $owner,
+                transaction => $txn,
+                actor       => $txn->Creator,
+                shift       => ($txn->CreatedObj->Unix - $deadline),
             };
             push @{ $self->Stats }, $stat;
         }
