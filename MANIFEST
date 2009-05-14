@@ -1,6 +1,8 @@
 Changes
 etc/initialdata
+html/Callbacks/RT-Extension-SLA/Ticket/Elements/Tabs/Default
 html/Callbacks/RT-Extension-SLA/Tools/Reports/Elements/Tabs/Default
+html/Ticket/SLA.html
 html/Tools/Reports/SLA.html
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
