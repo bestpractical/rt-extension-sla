@@ -1,15 +1,24 @@
 <%ARGS>
 $Query => undef
 $tabs => {}
+$Ticket => undef
 </%ARGS>
 <%INIT>
 
-$Query ||= $session{'CurrentSearchHash'}->{'Query'};
+return unless $session{'CurrentUser'}->PrincipalObj->HasRight(
+        Object => $RT::System, Right => 'SeeSLAReports',
+);
 
-return unless $Query;
-
-$tabs->{"m"} = {
-    path  => "Tools/Reports/SLA.html?". $m->comp( '/Elements/QueryString', Query => $Query ),
-    title => loc('Report SLA'),
-};
+if ( $Ticket ) {
+    $tabs->{'this'}->{"subtabs"}->{'_DA'} = {
+        path  => "Ticket/SLA.html?id=". $Ticket->id,
+        title => loc('Report SLA'),
+    };
+}
+elsif ( $Query ||= $session{'CurrentSearchHash'}->{'Query'} ) {
+    $tabs->{"m"} = {
+        path  => "Tools/Reports/SLA.html?". $m->comp( '/Elements/QueryString', Query => $Query ),
+        title => loc('Report SLA'),
+    };
+}
 </%INIT>
