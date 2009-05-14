@@ -1,0 +1,46 @@
+<& /Elements/Header, Title => $title &>
+<& /Ticket/Elements/Tabs, 
+    Ticket => $ticket,
+    current_tab => "Ticket/SLA.html?id=$id",
+    Title => $title,
+&>
+
+<table>
+<tr><th>#</th><th>Description</th><th>Type</th><th>Owner</th><th>Failed</th><th>Shift</th></tr>
+% foreach my $stat ( @{ $report->Stats } ) {
+<tr>
+<td><% $stat->{transaction}->id %></td>
+<td><% $stat->{transaction}->Description %></td>
+<td><% $stat->{owner_act}? 'yes' : 'no' %></td>
+<td><% $stat->{failed}? 'yes' : 'no' %></td>
+<td><% $stat->{shift} %></td>
+</tr>
+% }
+</table>
+
+<%ARGS>
+$id => undef
+</%ARGS>
+<%INIT>
+
+unless (
+    $session{'CurrentUser'}->PrincipalObj->HasRight(
+        Object => $RT::System, Right => 'SeeSLAReports',
+    )
+) {
+    Abort("You're not allowed to see SLA reports.");
+}
+
+my $ticket = LoadTicket($id);
+unless ($ticket->CurrentUserHasRight('ShowTicket')) {
+    Abort("No permission to view ticket");
+}
+$id = $ARGS{'id'} = $ticket->id;
+
+my $title = loc("SLA performance on ticket #[_1]", $id);
+
+use RT::Extension::SLA;
+my $report = RT::Extension::SLA->Report( $ticket );
+use Data::Dumper;
+$RT::Logger->crit( Dumper $report );
+</%INIT>
