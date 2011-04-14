@@ -4,7 +4,7 @@ use warnings;
 
 package RT::Action::SLA;
 
-use base qw(RT::Extension::SLA RT::Action::Generic);
+use base qw(RT::Extension::SLA RT::Action);
 
 =head1 NAME
 

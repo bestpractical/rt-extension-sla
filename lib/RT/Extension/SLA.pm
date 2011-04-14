@@ -444,16 +444,16 @@ sub GetDefaultServiceLevel {
 =head2 Classes
 
 Actions are subclasses of L<RT::Action::SLA> class that is subclass of
-L<RT::Extension::SLA> and L<RT::Action::Generic> classes.
+L<RT::Extension::SLA> and L<RT::Action> classes.
 
 Conditions are subclasses of L<RT::Condition::SLA> class that is subclass of
-L<RT::Extension::SLA> and L<RT::Condition::Generic> classes.
+L<RT::Extension::SLA> and L<RT::Condition> classes.
 
 L<RT::Extension::SLA> is a base class for all classes in the extension,
 it provides access to config, generates L<Business::Hours> objects, and
 other things useful for whole extension. As this class is the base for
 all actions and conditions then we MUST avoid adding methods which overload
-methods in 'RT::{Condition,Action}::Generic' RT's modules.
+methods in 'RT::{Condition,Action}' RT's modules.
 
 =head1 NOTES
 
