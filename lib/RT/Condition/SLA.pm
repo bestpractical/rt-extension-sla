@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package RT::Condition::SLA;
-use base qw(RT::Extension::SLA RT::Condition);
+use base qw(RT::Extension::SLA RT::Condition::Generic);
 
 =head1 SLAIsApplied
 

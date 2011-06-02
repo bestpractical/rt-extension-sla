@@ -4,7 +4,7 @@ use warnings;
 
 package RT::Extension::SLA;
 
-our $VERSION = '0.03_02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
@@ -13,14 +13,6 @@ RT::Extension::SLA - Service Level Agreements for RT
 =head1 DESCRIPTION
 
 RT extension to implement automated due dates using service levels.
-
-=head1 UPGRADING
-
-On upgrade you shouldn't run 'make initdb'.
-
-If you were using 0.02 or older version of this extension with
-RT 3.8.1 then you have to uninstall that manually. List of files
-you can find in the MANIFEST.
 
 =head1 INSTALL
 
@@ -53,7 +45,7 @@ There is no WebUI in the current version. Almost everything is
 controlled in the RT's config using option C<%RT::ServiceAgreements>
 and C<%RT::ServiceBusinessHours>. For example:
 
-    Set( %ServiceAgreements,
+    %RT::ServiceAgreements = (
         Default => '4h',
         QueueDefault => {
             'Incident' => '2h',
@@ -256,7 +248,7 @@ of requests that came into the system during the last night.
 In the config you can set one or more work schedules. Use the following
 format:
 
-    Set( %ServiceBusinessHours,
+    %RT::ServiceBusinessHours = (
         'Default' => {
             ... description ...
         },
@@ -282,7 +274,7 @@ hours.
 
 then %RT::ServiceBusinessHours should have the corresponding definition:
 
-    Set( %ServiceBusinessHours,
+    %RT::ServiceBusinessHours = (
         'work just in Monday' => {
             1 => { Name => 'Monday', Start => '9:00', End => '18:00' },
         },
@@ -294,14 +286,14 @@ Default Business Hours setting is in $RT::ServiceBusinessHours{'Default'}.
 
 In the config you can set per queue defaults, using:
 
-    Set( %ServiceAgreements,
+    %RT::ServiceAgreements = (
         Default => 'global default level of service',
         QueueDefault => {
             'queue name' => 'default value for this queue',
             ...
         },
         ...
-    );
+    };
 
 =head2 Access control
 
@@ -315,14 +307,6 @@ You may want to allow customers or managers to escalate thier tickets.
 Just grant them ModifyCustomField right.
 
 =cut
-
-{
-    my $right = 'SeeSLAReports';
-    use RT::System;
-    $RT::System::Rights->{$right} = 'See service level performance reports';
-    use RT::ACE;
-    $RT::ACE::LOWERCASERIGHTNAMES{ lc $right } = $right;
-}
 
 sub BusinessHours {
     my $self = shift;
@@ -443,28 +427,7 @@ sub GetDefaultServiceLevel {
     return $RT::ServiceAgreements{'Default'};
 }
 
-sub Report {
-    my $self = shift;
-    my $ticket = shift;
-
-    require RT::Extension::SLA::Report;
-    return RT::Extension::SLA::Report->new( Ticket => $ticket )->Run;
-}
-
-=head1 TODO and CAVEATS
-
-    * [not implemented] KeepInLoop and Response deadlines need adjusting. For example
-      KeepInLoop is 2h and Response is 2h as well. Owner replies at point 0, deadline
-      is 2h, at 1h requestor replies with anything -> deadline is moved according to
-      response deadline to 3h when it must stay at 2h waiting for KeepInLoop follow up
-      from owner and then move to another KeepInLoop deadline at 4h.
-
-    * [not implemented] Manually entered Due date should be treated as Resolve deadline.
-      We should store it and use later, so this module can be used for projects. For
-      example: Response 4 hours, KeepInLoop 1 day, Resolve 5 b.days; these are defaults,
-      but any manual change to Due date changes Resolve deadline.
-
-    * [not implemented] WebUI
+=head1 TODO
 
     * [implemented, TODO: tests for options in the config] default SLA for queues
 
@@ -474,21 +437,23 @@ sub Report {
       something else). So people would be able to handle tickets in the right
       order using Due dates.
 
+    * [not implemented] WebUI
+
 =head1 DESIGN
 
 =head2 Classes
 
 Actions are subclasses of L<RT::Action::SLA> class that is subclass of
-L<RT::Extension::SLA> and L<RT::Action> classes.
+L<RT::Extension::SLA> and L<RT::Action::Generic> classes.
 
 Conditions are subclasses of L<RT::Condition::SLA> class that is subclass of
-L<RT::Extension::SLA> and L<RT::Condition> classes.
+L<RT::Extension::SLA> and L<RT::Condition::Generic> classes.
 
 L<RT::Extension::SLA> is a base class for all classes in the extension,
 it provides access to config, generates L<Business::Hours> objects, and
 other things useful for whole extension. As this class is the base for
 all actions and conditions then we MUST avoid adding methods which overload
-methods in 'RT::{Condition,Action}' RT's modules.
+methods in 'RT::{Condition,Action}::Generic' RT's modules.
 
 =head1 NOTES
 

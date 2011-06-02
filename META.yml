@@ -8,7 +8,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.88'
+generated_by: 'Module::Install version 0.85'
 license: gpl2
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,7 +17,6 @@ name: RT-Extension-SLA
 no_index:
   directory:
     - etc
-    - html
     - inc
     - t
 requires:
@@ -25,4 +24,4 @@ requires:
   perl: 5.8.0
 resources:
   license: http://opensource.org/licenses/gpl-2.0.php
-version: 0.03_02
+version: 0.03
