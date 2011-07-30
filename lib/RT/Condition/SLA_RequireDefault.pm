@@ -16,7 +16,9 @@ value set.
 sub IsApplicable {
     my $self = shift;
     return 0 unless $self->TransactionObj->Type eq 'Create';
-    return 0 if $self->TicketObj->FirstCustomFieldValue('SLA');
+    my $ticket = $self->TicketObj;
+    return 0 unless lc($ticket->Type) eq 'ticket';
+    return 0 if $ticket->FirstCustomFieldValue('SLA');
     return 0 unless $self->SLAIsApplied;
     return 1;
 }
