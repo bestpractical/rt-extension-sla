@@ -3,17 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 72;
-
-require 't/utils.pl';
-
-use_ok 'RT';
-RT::LoadConfig();
-$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
-RT::Init();
-
-use_ok 'RT::Ticket';
-use_ok 'RT::Extension::SLA';
+use RT::Extension::SLA::Test tests => 72;
 
 diag 'check change of Due date when SLA for a ticket is changed';
 {

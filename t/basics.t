@@ -3,9 +3,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use RT::Extension::SLA::Test tests => 4, nodb => 1;
 
 use_ok 'RT::Extension::SLA';
-
 
 1;

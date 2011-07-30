@@ -3,20 +3,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
-
-require 't/utils.pl';
-
-use_ok 'RT';
-RT::LoadConfig();
-$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
-RT::Init();
-
-use_ok 'RT::Ticket';
-use_ok 'RT::Extension::SLA';
-
 use Test::MockTime qw( :all );
-
+use RT::Extension::SLA::Test tests => 9;
 
 my $queue = RT::Queue->new($RT::SystemUser);
 $queue->Load('General');
