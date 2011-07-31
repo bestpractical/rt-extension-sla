@@ -11,7 +11,7 @@ $queue->Load('General');
 
 my $queue_sla = RT::Attribute->new($RT::SystemUser);
 
-diag 'check set of Due date with Queue default SLA';
+diag 'check set of Due date with Queue default SLA' if $ENV{'TEST_VERBOSE'};
 {
 
     # add default SLA for 'General';

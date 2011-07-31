@@ -10,7 +10,7 @@ use RT::Extension::SLA::Test tests => 9;
 $ENV{'TZ'} = 'GMT';
 RT->Config->Set( Timezone => 'GMT' );
 
-diag 'check business hours';
+diag 'check business hours' if $ENV{'TEST_VERBOSE'};
 {
 
     no warnings 'once';

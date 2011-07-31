@@ -12,7 +12,7 @@ RT->Config->Set( Timezone => 'GMT' );
 
 my $bhours = RT::Extension::SLA->BusinessHours;
 
-diag 'check Starts date';
+diag 'check Starts date' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => 'standard',
@@ -55,7 +55,7 @@ diag 'check Starts date';
     restore_time();
 }
 
-diag 'check Starts date with StartImmediately enabled';
+diag 'check Starts date with StartImmediately enabled' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => 'start immediately',
