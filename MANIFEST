@@ -23,6 +23,7 @@ lib/RT/Condition/SLA_RequireDefault.pm
 lib/RT/Condition/SLA_RequireDueSet.pm
 lib/RT/Condition/SLA_RequireStartsSet.pm
 lib/RT/Extension/SLA.pm
+lib/RT/Extension/SLA/Test.pm
 lib/RT/Queue_SLA.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -32,4 +33,3 @@ t/business_hours.t
 t/due.t
 t/queue.t
 t/starts.t
-t/utils.pl
