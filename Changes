@@ -1,3 +1,8 @@
+0.05 Sun Jul 31 04:08:45 MSD 2011
+
+    * don't set default SLA for reminders
+    * switch over RT::Test in tests
+
 0.04 Fri Jun  3 02:02:15 MSD 2011
 
     * RT 4.0 compatibility fix
