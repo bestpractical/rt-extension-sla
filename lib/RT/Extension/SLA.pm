@@ -26,6 +26,13 @@ RT extension to implement automated due dates using service levels.
 
 =item make initdb (for the first time only)
 
+=item Base configuration
+
+In RT 3.8 and later, you must enable the plugin by adding RT::Extension::SLA
+to your @Plugins line (or create one) like:
+
+    Set(@Plugins,(qw(RT::Extension::SLA)));
+
 =back
 
 =head1 CONFIGURATION
