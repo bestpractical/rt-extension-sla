@@ -28,6 +28,7 @@ lib/RT/Condition/SLA_RequireDueSet.pm
 lib/RT/Condition/SLA_RequireStartsSet.pm
 lib/RT/Extension/SLA.pm
 lib/RT/Extension/SLA/Report.pm
+lib/RT/Extension/SLA/Test.pm
 lib/RT/Extension/SLA/Summary.pm
 lib/RT/Queue_SLA.pm
 Makefile.PL
@@ -39,4 +40,3 @@ t/due.t
 t/queue.t
 t/reporting/basic.t
 t/starts.t
-t/utils.pl

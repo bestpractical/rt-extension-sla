@@ -3,29 +3,16 @@
 use strict;
 use warnings;
 
-use Test::More tests => 12; 
-
-require 't/utils.pl';
-
-use_ok 'RT';
-RT::LoadConfig();
-$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
-
-# XXX, TODO
-# we assume the RT's Timezone is UTC now, need a smart way to get over that.
-$ENV{'TZ'} = $RT::Timezone = 'GMT';
-
-RT::Init();
-
-use_ok 'RT::Ticket';
-
-use_ok 'RT::Extension::SLA';
-
 use Test::MockTime qw( :all );
+use RT::Extension::SLA::Test tests => 12;
+
+# we assume the RT's Timezone is UTC now, need a smart way to get over that.
+$ENV{'TZ'} = 'GMT';
+RT->Config->Set( Timezone => 'GMT' );
 
 my $bhours = RT::Extension::SLA->BusinessHours;
 
-diag 'check Starts date';
+diag 'check Starts date' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => 'standard',
@@ -68,7 +55,7 @@ diag 'check Starts date';
     restore_time();
 }
 
-diag 'check Starts date with StartImmediately enabled';
+diag 'check Starts date with StartImmediately enabled' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => 'start immediately',

@@ -3,19 +3,9 @@
 use strict;
 use warnings;
 
-use Test::More tests => 72;
+use RT::Extension::SLA::Test tests => 72;
 
-require 't/utils.pl';
-
-use_ok 'RT';
-RT::LoadConfig();
-$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
-RT::Init();
-
-use_ok 'RT::Ticket';
-use_ok 'RT::Extension::SLA';
-
-diag 'check change of Due date when SLA for a ticket is changed';
+diag 'check change of Due date when SLA for a ticket is changed' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',
@@ -47,7 +37,7 @@ diag 'check change of Due date when SLA for a ticket is changed';
     is $new_due, $orig_due+2*60*60, 'difference is two hours';
 }
 
-diag 'when not requestor creates a ticket, we dont set due date';
+diag 'when not requestor creates a ticket, we dont set due date' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',
@@ -70,7 +60,7 @@ diag 'when not requestor creates a ticket, we dont set due date';
     ok $due <= 0, 'Due date is not set';
 }
 
-diag 'check that reply to requestors unset due date';
+diag 'check that reply to requestors unset due date' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',
@@ -168,7 +158,7 @@ diag 'check that reply to requestors unset due date';
     }
 }
 
-diag 'check that reply to requestors dont unset due date with KeepInLoop';
+diag 'check that reply to requestors dont unset due date with KeepInLoop' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',
@@ -278,7 +268,7 @@ diag 'check that reply to requestors dont unset due date with KeepInLoop';
     }
 }
 
-diag 'check that replies dont affect resolve deadlines';
+diag 'check that replies dont affect resolve deadlines' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',
@@ -342,7 +332,7 @@ diag 'check that replies dont affect resolve deadlines';
     }
 }
 
-diag 'check that owner is not treated as requestor';
+diag 'check that owner is not treated as requestor' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',
@@ -375,7 +365,7 @@ diag 'check that owner is not treated as requestor';
     }
 }
 
-diag 'check that response deadline is left alone when there is no requestor';
+diag 'check that response deadline is left alone when there is no requestor' if $ENV{'TEST_VERBOSE'};
 {
     %RT::ServiceAgreements = (
         Default => '2',

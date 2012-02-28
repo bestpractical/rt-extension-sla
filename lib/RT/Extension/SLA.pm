@@ -4,7 +4,7 @@ use warnings;
 
 package RT::Extension::SLA;
 
-our $VERSION = '0.03_02';
+our $VERSION = '0.05_01';
 
 =head1 NAME
 
@@ -33,6 +33,13 @@ you can find in the MANIFEST.
 =item make install
 
 =item make initdb (for the first time only)
+
+=item Base configuration
+
+In RT 3.8 and later, you must enable the plugin by adding RT::Extension::SLA
+to your @Plugins line (or create one) like:
+
+    Set(@Plugins,(qw(RT::Extension::SLA)));
 
 =back
 

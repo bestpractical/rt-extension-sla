@@ -3,27 +3,14 @@
 use strict;
 use warnings;
 
-
-use Test::More tests => 9;
-
-require 't/utils.pl';
-
-use_ok 'RT';
-RT::LoadConfig();
-$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
-
-# XXX, TODO 
-# we assume the RT's Timezone is UTC now, need a smart way to get over that.
-$ENV{'TZ'} = $RT::Timezone = 'GMT';
-
-RT::Init();
-
-use_ok 'RT::Ticket';
-use_ok 'RT::Extension::SLA';
-
 use Test::MockTime qw( :all );
+use RT::Extension::SLA::Test tests => 9;
 
-diag 'check business hours';
+# we assume the RT's Timezone is UTC now, need a smart way to get over that.
+$ENV{'TZ'} = 'GMT';
+RT->Config->Set( Timezone => 'GMT' );
+
+diag 'check business hours' if $ENV{'TEST_VERBOSE'};
 {
 
     no warnings 'once';
