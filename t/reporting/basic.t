@@ -4,16 +4,8 @@ use strict;
 use warnings;
 use Test::MockTime qw(set_fixed_time);
 
-use Test::More tests => 72;
+use RT::Extension::SLA::Test tests => 6;
 
-require 't/utils.pl';
-
-use_ok 'RT';
-RT::LoadConfig();
-$RT::LogToScreen = $ENV{'TEST_VERBOSE'} ? 'debug': 'warning';
-RT::Init();
-
-use_ok 'RT::Ticket';
 use_ok 'RT::Extension::SLA::Report';
 
 my $root = RT::User->new( $RT::SystemUser );
