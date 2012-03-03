@@ -1,33 +1,24 @@
 <& /Elements/Header, Title => $title &>
-<& /Tools/Reports/Elements/Tabs, current_tab => 'Tools/Reports/SLA.html', Title => $title &>
+<& /Elements/Tabs &>
 
+<&| /Widgets/TitleBox, title => loc('Summary') &>
+<form method="post" action="SLA.html">
 <table>
-<tr>
-<th><% loc('Owner') %></th>
-% my @columns = $summary->Labels;
-% my $i = 0;
-% foreach ( map $_->[0], grep $i++%2, @columns ) {
-<th><% loc($_) %></th>
-% }
-</tr>
-
-% while ( my ($owner, $stats) = each %$result ) {
-% my $user = RT::User->new( $session{'CurrentUser'} );
-% $user->Load( $owner );
-<tr>
-<td><& /Elements/ShowUser, User => $user &></td>
-% my $i = 1;
-% foreach ( map $stats->{ $_ }, grep $i++%2, @columns ) {
-<td><% $_ || 0 %></td>
-% }
-</tr>
-% }
+    <tr>
+        <td class="label"><&|/l&>Query</&>:</td>
+        <td class="value"><textarea cols="60" rows="20" name="Query"><% $Query %></textarea></td>
+    </tr>
 </table>
 
-<form method="post" action="SLA.html">
-<&|/l&>Query</&>:<textarea cols="60" rows="20" name="Query"><% $Query %></textarea>
-<& /Elements/Submit, Label => loc('Update report') &>
+<& /Elements/Submit, Label => loc('Update') &>
 </form>
+</&>
+
+% if ( $summary ) {
+<&| /Widgets/TitleBox, title => loc('Summary') &>
+<& /Elements/SLA/ShowReportSummary, Summary => $summary &>
+</&>
+% }
 
 <%ARGS>
 $Query => undef
@@ -43,16 +34,16 @@ unless (
 
 my $title = loc("Report on Service Level Agreements");
 
-use RT::Extension::SLA::Summary;
-my $summary = new RT::Extension::SLA::Summary;
+my $summary;
+if ( $Query ) {
+    $summary = new RT::Extension::SLA::Summary;
 
-my $tickets = RT::Tickets->new( $session{'CurrentUser'} );
-$tickets->FromSQL( $Query );
-$tickets->OrderByCols( {FIELD => 'id', ORDER => 'ASC'} );
-while ( my $ticket = $tickets->Next ) {
-    my $report = RT::Extension::SLA->Report( $ticket );
-    $summary->AddReport( $report );
+    my $tickets = RT::Tickets->new( $session{'CurrentUser'} );
+    $tickets->FromSQL( $Query );
+    $tickets->OrderByCols( {FIELD => 'id', ORDER => 'ASC'} );
+    while ( my $ticket = $tickets->Next ) {
+        $summary->AddReport( RT::Extension::SLA->TicketReport( $ticket ) );
+    }
+    $summary->Finalize;
 }
-
-my $result = $summary->Result;
 </%INIT>
