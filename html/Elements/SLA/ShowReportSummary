@@ -1,0 +1,114 @@
+<em>All replies by requestors, owners and other.</em>
+
+<table class="sla">
+<tbody>
+% foreach my $role (qw(requestor owner other)) {
+% my $v = $data->{'messages'}{ $role } or next;
+<tr><th><% loc($label{ $role }) %></th><td><% $v %></td></tr>
+% }
+</tbody>
+<tfoot>
+<tr><th><% loc($label{'*'}) %></th><td><% $data->{'messages'}{'*'} %></td></tr>
+</tfoot>
+</table>
+
+% if ( my $fr = $data->{'FirstResponse'} ) {
+<em>First response</em>
+% if ( $fr->{'count'} == 1 ) {
+<table class="sla"><tr><td><% $time_interval->( $fr->{'sum'} ) %></td></tr></table>
+% }
+% else {
+<table class="sla">
+<tbody>
+<tr><th><% loc('Min') %></th><td><% $time_interval->( $fr->{'min'} ) %></td></tr>
+<tr><th><% loc('Average') %></th><td><% $time_interval->( $fr->{'avg'} ) %></td></tr>
+<tr><th><% loc('Max') %></th><td><% $time_interval->( $fr->{'max'} ) %></td></tr>
+</tbody>
+</table>
+% }
+% }
+
+% if ( $data->{'Response'} ) {
+<em>Repsonse time to requestor and from requestor</em>
+<table class="sla">
+<thead>
+    <tr>
+        <th>&nbsp;</th>
+        <th><% loc('Count') %></th>
+        <th><% loc('Min') %></th>
+        <th><% loc('Average') %></th>
+        <th><% loc('Max') %></th>
+        <th><% loc('Sum') %></th>
+    </tr>
+</thead>
+<%PERL>
+my $render_row = sub {
+    my $role = shift;
+    my $data = shift;
+    my $res = '<tr>';
+    $res .= '<th>'. $eh->( loc( $label{ $role } ) ) .'</th>';
+    $res .= '<td>'. $eh->( $data->{'count'} ) .'</td>';
+    if ( $data->{'count'} > 1 ) {
+        foreach (qw(min avg max sum)) {
+            $res .= '<td>'. $eh->( $time_interval->( $data->{$_} ) ) .'</td>';
+        }
+    }
+    else {
+        $res .= '<td colspan="4">'. $eh->( $time_interval->( $data->{'sum'} ) ) .'</td>';
+    }
+    $res .= '</tr>';
+    return $res;
+};
+</%PERL>
+<tbody>
+% foreach my $role (qw(requestor owner other)) {
+% my $data = $data->{'Response'}{ $role } or next;
+<% $render_row->( $role, $data ) |n %>
+% }
+</tbody>
+% if ( my $totals = $data->{'Response'}{'*'} ) {
+<tfoot><% $render_row->( '*' => $totals ) |n %></tfoot>
+% }
+</table>
+% }
+
+% if ( my $dp = $data->{'deadlines'}{'passed'} ) {
+<em>Deadlines met</em>
+<table class="sla"><tr><td><% $dp %></td></tr></table>
+% }
+
+% if ( my $failed = $data->{'deadlines'}{'failed'} ) {
+<em>Missed deadlines</em>
+<table class="sla">
+<tbody>
+<tr><th><% loc('Count') %></th><td><% $failed->{'count'} %></td></tr>
+% if ( $failed->{'count'} > 1 ) {
+<tr><th><% loc('Min') %></th><td><% $time_interval->( $failed->{'min'} ) %></td></tr>
+<tr><th><% loc('Average') %></th><td><% $time_interval->( $failed->{'avg'} ) %></td></tr>
+<tr><th><% loc('Max') %></th><td><% $time_interval->( $failed->{'max'} ) %></td></tr>
+% }
+<tr><th><% loc('Sum') %></th><td><% $time_interval->( $failed->{'sum'} ) %></td></tr>
+</tbody>
+</table>
+% }
+
+<%ONCE>
+my $eh = sub { my $v = shift; RT::Interface::Web::EscapeUTF8( \$v ); return $v };
+my $time_interval = sub {
+    return RT::Date->new( $session{'CurrentUser'} )
+        ->DurationAsString( shift );
+};
+my %label = (
+    requestor => 'Requestors',
+    owner => 'Owners',
+    other => 'Other',
+    '*'   => 'Total',
+);
+
+</%ONCE>
+<%ARGS>
+$Summary
+</%ARGS>
+<%INIT>
+my $data = $Summary->Result;
+</%INIT>

@@ -3,8 +3,9 @@ use strict;
 use warnings;
 
 package RT::Extension::SLA;
-
 our $VERSION = '0.05_01';
+
+use RT::Extension::SLA::Report;
 
 =head1 NAME
 
@@ -323,6 +324,8 @@ Just grant them ModifyCustomField right.
 
 =cut
 
+push @{ scalar RT->Config->Get('CSSFiles') }, 'base/sla-table.css';
+
 {
     my $right = 'SeeSLAReports';
     use RT::System;
@@ -398,6 +401,22 @@ sub Due {
     return $res;
 }
 
+sub SecondsBetween {
+    my $self = shift;
+    my %args = ( Level => undef, From => undef, To => undef, @_);
+    my ($from, $to) = @args{'From', 'To'};
+
+    my $sign = 1;
+    if ( $from > $to ) {
+        $sign = -1;
+        ($from, $to) = ($to, $from);
+    }
+
+    return $sign * ( $self->BusinessHours(
+        $RT::ServiceAgreements{'Levels'}{ $args{'Level'} }{'BusinessHours'}
+    )->between( $from, $to ) - 1 );
+}
+
 sub Starts {
     my $self = shift;
     my %args = ( Level => undef, Time => undef, @_ );
@@ -450,7 +469,7 @@ sub GetDefaultServiceLevel {
     return $RT::ServiceAgreements{'Default'};
 }
 
-sub Report {
+sub TicketReport {
     my $self = shift;
     my $ticket = shift;
 

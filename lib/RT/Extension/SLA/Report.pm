@@ -13,7 +13,7 @@ sub new {
 sub init {
     my $self = shift;
     my %args = (Ticket => undef, @_);
-    $self->{'Ticket'} = $args{'Ticket'} || die "boo";
+    $self->{'Ticket'} = $args{'Ticket'} || die Carp::longmess( "boo" );
     $self->{'State'} = {};
     $self->{'Stats'} = [];
     return $self;
@@ -23,11 +23,11 @@ sub Run {
     my $self = shift;
     my $txns = shift || $self->{'Ticket'}->Transactions;
 
-    my $state = $self->State;
     my $handler = $self->Handlers;
 
     while ( my $txn = $txns->Next ) {
         my ($type, $field) = ($txn->Type, $txn->Field);
+        $_ ||= '' foreach $type, $field;
 
         my $h = $handler->{ $type };
         unless ( $h ) {
@@ -41,19 +41,25 @@ sub Run {
 
         $RT::Logger->debug( "Handling transaction #". $txn->id ." ($type, $field) of ticket #". $self->{'Ticket'}->id );
 
-        $self->$h( Ticket => $self->{'Ticket'}, Transaction => $txn, State => $state );
+        $self->$h( Ticket => $self->{'Ticket'}, Transaction => $txn );
     }
     return $self;
 }
 
 sub State {
     my $self = shift;
-    return $self->{State};
+    return $self->{State} ||= {};
 }
 
 sub Stats {
     my $self = shift;
-    return $self->{Stats};
+    return $self->{Stats} ||= [];
+}
+
+sub Summary {
+    my $self = shift;
+    use RT::Extension::SLA::Summary;
+    return RT::Extension::SLA::Summary->new->AddReport( $self )->Finalize;
 }
 
 { my $cache;
@@ -61,7 +67,7 @@ sub Handlers {
     my $self = shift;
 
     return $cache if $cache;
-    
+
     $cache = {
         Create => 'OnCreate',
         Set    => {
@@ -78,9 +84,9 @@ sub Handlers {
 
 sub OnCreate {
     my $self = shift;
-    my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
+    my %args = ( Ticket => undef, Transaction => undef, @_);
 
-    my $state = $args{'State'};
+    my $state = $self->State;
     %$state = ();
     $state->{'level'} = $self->InitialServiceLevel( Ticket => $args{'Ticket'} );
     $state->{'requestors'} = [ $self->InitialRequestors( Ticket => $args{'Ticket'} ) ];
@@ -90,9 +96,9 @@ sub OnCreate {
 
 sub OnRequestorChange {
     my $self = shift;
-    my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
+    my %args = ( Ticket => undef, Transaction => undef, @_);
 
-    my $requestors = $self->State->{'requestors'};
+    my $requestors = $self->State->{'requestors'} ||= [];
     if ( $args{'Transaction'}->Type eq 'AddWatcher' ) {
         push @$requestors, $args{'Transaction'}->NewValue;
     }
@@ -104,89 +110,78 @@ sub OnRequestorChange {
 
 sub OnServiceLevelChange {
     my $self = shift;
-    my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
+    my %args = ( Transaction => undef, @_);
     $self->State->{'level'} = $args{'Transaction'}->NewValue;
 }
 
 sub OnResponse {
     my $self = shift;
-    my %args = ( Ticket => undef, Transaction => undef, State => undef, @_);
+    my %args = ( Transaction => undef, Create => 0, @_);
 
+    my $state = $self->State;
     my $txn = $args{'Transaction'};
-#    unless ( $args{'State'}->{'level'} ) {
-#        $RT::Logger->debug('No service level -> ignore txn #'. $txn->id );
-#        return;
-#    }
 
-    my $act = $args{'State'}->{'act'};
-    if ( $self->IsRequestorsAct( $txn ) ) {
-        if ( $act && $act->{'requestor'} ) {
-            # several requestors' acts in a row don't move deadlines
-            return;
-        }
-        $act ||= $args{'State'}->{'act'} = {};
+    my %stats = (
+        transaction => $txn->id,
+        owner       => $state->{'owner'},
+        actor       => $txn->Creator,
+        actor_role  =>
+            $self->IsRequestorsAct( $txn ) ? 'requestor'
+            : $state->{'owner'} == $txn->Creator ? 'owner'
+            : 'other'
+        ,
+        acted_on    => $txn->CreatedObj->Unix,
+        previous    => $self->Stats->[-1],
+    );
 
-        $act->{'requestor'} = 1;
-        $act->{'acted'} = $txn->CreatedObj->Unix;
-    } else {
-        unless ( $act ) {
-            $act = $args{'State'}->{'act'} = {};
-            $act->{'requestor'} = 0;
-            $act->{'acted'} = $txn->CreatedObj->Unix;
-            return;
-        }
-        unless ( $act->{'requestor'} ) {
-            # check keep in loop
-            my $deadline = RT::Extension::SLA->Due(
-                Type  => 'KeepInLoop',
-                Level => $args{'State'}->{'level'},
-                Time  => $args{'State'}->{'acted'},
-            );
-            unless ( defined $deadline ) {
-                $RT::Logger->debug( "Multiple non-requestors replies in a raw, without keep in loop deadline");
-                return;
+    unless ( $stats{'previous'} ) {
+        $stats{'type'} = 'Create';
+    }
+    elsif ( $stats{'actor_role'} eq 'requestor' ) {
+        if ( $stats{'previous'}{'actor_role'} eq 'requestor' ) {
+            $stats{'type'} = 'FollowUp';
+            $stats{'to'} = $stats{'previous'};
+        } else {
+            $stats{'type'} = 'Response';
+            my $tmp = $stats{'previous'};
+            while ( $tmp->{'previous'} && $tmp->{'previous'}{'actor_role'} ne 'requestor' ) {
+                $tmp = $tmp->{'previous'};
             }
-            # keep in loop
-            my $failed = $txn->CreatedObj->Unix > $deadline? 1 : 0;
-            my $owner = $args{'State'}->{'owner'} == $txn->Creator? 1 : 0;
-            my $stat = {
-                type        => 'KeepInLoop',
-                owner       => $args{'State'}->{'owner'},
-                failed      => $failed,
-                owner_act   => $owner,
-                transaction => $txn,
-                actor       => $txn->Creator,
-                shift       => $txn->CreatedObj->Unix - $deadline,                
-            };
-            push @{ $self->Stats }, $stat;
-        }
-        else {
-            # check response
-            my $deadline = RT::Extension::SLA->Due(
-                Type  => 'Response',
-                Level => $args{'State'}->{'level'},
-                Time  => $args{'State'}->{'act'}->{'acted'},
-            );
-            unless ( defined $deadline ) {
-                $RT::Logger->debug( "Non-requestors' reply after requestors', without response deadline");
-                return;
-            }
-
-            # repsonse
-            my $failed = $txn->CreatedObj->Unix > $deadline? 1 : 0;
-            my $owner = $args{'State'}->{'owner'} == $txn->Creator? 1 : 0;
-            my $stat = {
-                type        => 'Response',
-                owner       => $args{'State'}->{'owner'},
-                failed      => $failed,
-                owner_act   => $owner,
-                transaction => $txn,
-                actor       => $txn->Creator,
-                shift       => ($txn->CreatedObj->Unix - $deadline),
-            };
-            push @{ $self->Stats }, $stat;
+            $stats{'to'} = $tmp;
         }
     }
+    else {
+        if ( $stats{'previous'}{'actor_role'} ne 'requestor' ) {
+            $stats{'type'} = 'KeepInLoop';
+            $stats{'to'} = $stats{'previous'};
+        } else {
+            $stats{'type'} = 'Response';
+            my $tmp = $stats{'previous'};
+            while ( $tmp->{'previous'} && $tmp->{'previous'}{'actor_role'} eq 'requestor' ) {
+                $tmp = $tmp->{'previous'};
+            }
+            $stats{'to'} = $tmp;
+        }
+
+        $stats{'deadline'} = RT::Extension::SLA->Due(
+            Type  => $stats{'type'},
+            Level => $state->{'level'},
+            Time  => $stats{'to'}{'acted_on'},
+        );
+        $stats{'difference'} = RT::Extension::SLA->SecondsBetween(
+            Level => $state->{'level'},
+            From  => $stats{'deadline'},
+            To    => $stats{'acted_on'},
+        ) if defined $stats{'deadline'};
+    }
+
+    $stats{'time'} = RT::Extension::SLA->SecondsBetween(
+        Level => $state->{'level'},
+        From  => $stats{'to'}{'acted_on'},
+        To    => $stats{'acted_on'},
+    ) if $stats{'to'};
+
+    push @{ $self->Stats }, \%stats;
 }
 
 sub IsRequestorsAct {
@@ -197,10 +192,10 @@ sub IsRequestorsAct {
 
     # owner is always treated as non-requestor
     return 0 if $actor == $self->State->{'owner'};
-    return 1 if grep $_ == $actor, @{ $self->State->{'requestors'} };
+    return 1 if grep $_ == $actor, @{ $self->State->{'requestors'} || [] };
 
     # in case requestor is a group
-    foreach my $id ( @{ $self->State->{'requestors'} } ){
+    foreach my $id ( @{ $self->State->{'requestors'} || [] } ){
         my $cgm = RT::CachedGroupMember->new( $RT::SystemUser );
         $cgm->LoadByCols( GroupId => $id, MemberId => $actor, Disabled => 0 );
         return 1 if $cgm->id;
@@ -271,7 +266,8 @@ sub Transactions {
     my $self = shift;
     my %args = (Ticket => undef, Criteria => undef, Order => 'ASC', @_);
 
-    my $txns = $args{'Ticket'}->Transactions;
+    my $txns = RT::Transactions->new( $args{'Ticket'}->CurrentUser );
+    $txns->LimitToTicket( $args{'Ticket'}->id );
 
     my $clause = 'ByTypeAndField';
     while ( my ($type, $field) = each %{ $args{'Criteria'} } ) {

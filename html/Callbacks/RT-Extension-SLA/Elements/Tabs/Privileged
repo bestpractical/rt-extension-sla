@@ -1,0 +1,34 @@
+<%INIT>
+
+my $request_path = $HTML::Mason::Commands::r->path_info;
+
+if ( $request_path =~ m{^/Ticket/} ) {
+    if ( ( $m->request_args->{'id'} || '' ) =~ /^(\d+)$/ ) {
+        my $obj = RT::Ticket->new( $session{'CurrentUser'} );
+        $obj->Load($1);
+        return unless $obj->id;
+
+        return unless $obj->CurrentUserHasRight('SeeSLAReports');
+
+        PageMenu->child('actions')->child('sla_report' =>
+            path  => "/Ticket/SLA.html?id=". $obj->id,
+            title => loc('SLA Report'),
+        );
+    }
+}
+
+#elsif ( $Query ||= $session{'CurrentSearchHash'}->{'Query'} ) {
+#    $tabs->{"m"} = {
+#        path  => "Tools/Reports/SLA.html?". $m->comp( '/Elements/QueryString', Query => $Query ),
+#        title => loc('Report SLA'),
+#    };
+#}
+
+#return unless $session{'CurrentUser'}->PrincipalObj->HasRight(
+#    Object => $RT::System, Right => 'SeeSLAReports',
+#);
+#$tabs->{'s'} = {
+#    title => loc('Service Level Aggreements'),
+#    path  => 'Tools/Reports/SLA.html',
+#};
+</%INIT>
