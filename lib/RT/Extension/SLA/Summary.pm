@@ -99,13 +99,16 @@ sub MergeResults {
     my $dst = shift || $self->Result;
 
 
-    while ( my ($k, $v) = each %$src ) {
+    foreach my $k ( keys %$src ) {
+        my $v = $src->{ $k };
+
         unless ( ref $v ) {
             $dst->{$k} += $v;
         }
         elsif ( ref $v eq 'HASH' ) {
+            $dst->{$k} ||= {};
             if ( exists $v->{'count'} ) {
-                $self->MergeCountMinMaxSum( $src, $dst );
+                $self->MergeCountMinMaxSum( $v, $dst->{$k} );
                 $self->MergeResults(
                     { map { $_ => $v->{$_} } grep !/^(?:count|min|max|sum)$/, keys %$v  },
                     $dst->{ $k }
