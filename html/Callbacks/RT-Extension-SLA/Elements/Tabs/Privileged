@@ -21,18 +21,18 @@ if ( $request_path =~ m{^/Ticket/} ) {
     }
 }
 
-#elsif ( $Query ||= $session{'CurrentSearchHash'}->{'Query'} ) {
-#    $tabs->{"m"} = {
-#        path  => "Tools/Reports/SLA.html?". $m->comp( '/Elements/QueryString', Query => $Query ),
-#        title => loc('Report SLA'),
-#    };
-#}
+my $Query = $m->request_args->{'Query'} || $session{"CurrentSearchHash"}{'Query'};
+if ( $Query && PageMenu->child('more') ) {
+    PageMenu->child('more')->child(
+        sla =>
+        path => "/Tools/Reports/SLA.html?". $m->comp( '/Elements/QueryString', Query => $Query ),
+        title => loc('SLA Report'),
+    );
+}
 
-#return unless $session{'CurrentUser'}->PrincipalObj->HasRight(
-#    Object => $RT::System, Right => 'SeeSLAReports',
-#);
-#$tabs->{'s'} = {
-#    title => loc('Service Level Aggreements'),
-#    path  => 'Tools/Reports/SLA.html',
-#};
+Menu->child('tools')->child(
+    sla =>
+    path => "/Tools/Reports/SLA.html",
+    title => loc('SLA Report'),
+);
 </%INIT>
