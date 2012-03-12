@@ -1,8 +1,11 @@
 Changes
 etc/initialdata
 etc/upgrade/0.06/content
+html/Callbacks/RT-Extension-SLA/Elements/Tabs/Privileged
 html/Callbacks/RT-Extension-SLA/Ticket/Elements/Tabs/Default
 html/Callbacks/RT-Extension-SLA/Tools/Reports/Elements/Tabs/Default
+html/Elements/SLA/ShowReportSummary
+html/NoAuth/css/base/sla-table.css
 html/Ticket/SLA.html
 html/Tools/Reports/SLA.html
 inc/Module/AutoInstall.pm
