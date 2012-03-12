@@ -40,3 +40,4 @@ t/due.t
 t/queue.t
 t/reporting/basic.t
 t/starts.t
+README
