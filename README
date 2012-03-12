@@ -332,6 +332,36 @@ CONFIGURATION
     You may want to allow customers or managers to escalate thier tickets.
     Just grant them ModifyCustomField right.
 
+REPORTING
+    Since version 0.06 extension supports reporting. It works only with RT
+    4.0+. Reports accessible in the UI. Each ticket has 'SLA Report' element
+    in the page menu under 'Actions'. Search results also has element in the
+    menu under 'Feeds'. Also, 'SLA Reports' are under 'Tools' in the main
+    menu. This interface is protected by a new right 'SeeSLAReports'.
+
+    For purpose of statistics actors are splitted into three groups:
+    requestors, owner and other. Any user who was not requestor or owner at
+    the moment is assigned to 'other group'.
+
+    All time intervals are calculated in business hours.
+
+    The following statistics are collected:
+
+    *   count of replies splitted by above groups
+
+    *   first response to requestor
+
+        Tickets where first act was not by requestor are ignored. This
+        happens when somebody on the staff created ticket for client.
+
+    *   response times
+
+    *   number of deadlines met
+
+    *   failed deadlines and timing of such
+
+    Note that changing configuration changes stats.
+
 TODO and CAVEATS
         * [not implemented] KeepInLoop and Response deadlines need adjusting. For example
           KeepInLoop is 2h and Response is 2h as well. Owner replies at point 0, deadline
