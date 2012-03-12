@@ -389,6 +389,41 @@ to then grant SeeCustomField right.
 You may want to allow customers or managers to escalate thier tickets.
 Just grant them ModifyCustomField right.
 
+=head1 REPORTING
+
+Since version 0.06 extension supports reporting. It works only with RT
+4.0+. Reports accessible in the UI. Each ticket has 'SLA Report' element
+in the page menu under 'Actions'. Search results also has element in the
+menu under 'Feeds'. Also, 'SLA Reports' are under 'Tools' in the main
+menu. This interface is protected by a new right 'SeeSLAReports'.
+
+For purpose of statistics actors are splitted into three groups: requestors,
+owner and other. Any user who was not requestor or owner at the moment is
+assigned to 'other group'.
+
+All time intervals are calculated in business hours.
+
+The following statistics are collected:
+
+=over 4
+
+=item * count of replies splitted by above groups
+
+=item * first response to requestor
+
+Tickets where first act was not by requestor are ignored. This happens
+when somebody on the staff created ticket for client.
+
+=item * response times
+
+=item * number of deadlines met
+
+=item * failed deadlines and timing of such
+
+=back
+
+Note that changing configuration changes stats.
+
 =cut
 
 push @{ scalar RT->Config->Get('CSSFiles') }, 'base/sla-table.css';
