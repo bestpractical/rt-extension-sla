@@ -1,5 +1,9 @@
 <%INIT>
 
+return unless $session{'CurrentUser'}->PrincipalObj->HasRight(
+    Object => $RT::System, Right => 'SeeSLAReports',
+);
+
 my $request_path = $HTML::Mason::Commands::r->path_info;
 
 if ( $request_path =~ m{^/Ticket/} ) {
