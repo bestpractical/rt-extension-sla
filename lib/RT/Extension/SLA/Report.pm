@@ -278,11 +278,12 @@ sub Transactions {
             FIELD           => 'Type',
             VALUE           => $type,
         );
-        if ( $field ) {
-            my $tmp = ref $field? $field : [$field];
+
+        my @fields = (grep defined && length, ref $field? @$field : ($field));
+        if ( @fields ) {
             $txns->_OpenParen( $clause );
             my $first = 1;
-            foreach my $value ( @$tmp ) {
+            foreach my $value ( @fields ) {
                 $txns->Limit(
                     SUBCLAUSE       => $clause,
                     ENTRYAGGREGATOR => $first? 'AND' : 'OR',
