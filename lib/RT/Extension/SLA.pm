@@ -336,7 +336,14 @@ sub CalcBusinessHours {
 
 sub Agreement {
     my $self = shift;
-    my %args = ( Level => undef, Type => 'Response', Time => undef, @_ );
+    my %args = (
+        Level => undef,
+        Type => 'Response',
+        Time => undef,
+        Ticket => undef,
+        Queue  => undef,
+        @_
+    );
 
     my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
     return undef unless $meta;
@@ -365,6 +372,12 @@ sub Agreement {
             }
         }
     }
+
+    $args{'Queue'} ||= $args{'Ticket'}->QueueObj if $args{'Ticket'};
+    if ( $args{'Queue'} && ref $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
+        $res{'Timezone'} = $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name }{'Timezone'};
+    }
+    $res{'Timezone'} ||= $meta->{'Timezone'} || $RT::Timezone;
 
     $res{'BusinessHours'} = $meta->{'BusinessHours'};
 
@@ -437,8 +450,10 @@ sub GetDefaultServiceLevel {
         else {
             return $args{'Queue'}->SLA if $args{'Queue'}->SLA;
         }
-        if ( $RT::ServiceAgreements{'QueueDefault'} && $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
-            return $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name };
+
+        if ( my $info = $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
+            return $info unless ref $info;
+            return $info->{'Level'};
         }
     }
     return $RT::ServiceAgreements{'Default'};
