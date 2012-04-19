@@ -326,6 +326,14 @@ sub BusinessHours {
     return $res;
 }
 
+sub CalcBusinessHours {
+    my $self = shift;
+    my $meta = shift;
+    my $method = shift;
+    my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
+    return $bhours->$method( @_ );
+}
+
 sub Agreement {
     my $self = shift;
     my %args = ( Level => undef, Type => 'Response', Time => undef, @_ );
@@ -349,8 +357,7 @@ sub Agreement {
     }
 
     if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
-        my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
-        if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
+        if ( $self->CalcBusinessHours( $meta, first_after => $args{'Time'} ) != $args{'Time'} ) {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
                 next unless $tmp->{ $_ };
                 $res{ $_ } ||= 0;
@@ -373,8 +380,10 @@ sub Due {
 
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
-        my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
-        $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
+        $res = $self->CalcBusinessHours(
+            $agreement,
+            add_seconds => $res, 60 * $agreement->{'BusinessMinutes'},
+        );
     }
     $res += 60 * $agreement->{'RealMinutes'}
         if defined $agreement->{'RealMinutes'};
@@ -391,8 +400,9 @@ sub Starts {
 
     return $args{'Time'} if $agreement->{'StartImmediately'};
 
-    my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
-    return $bhours->first_after( $args{'Time'} );
+    return $self->CalcBusinessHours(
+        $agreement, first_after => $args{'Time'},
+    );
 }
 
 sub GetCustomField {
