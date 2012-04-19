@@ -359,6 +359,8 @@ sub Agreement {
         }
     }
 
+    $res{'BusinessHours'} = $meta->{'BusinessHours'};
+
     return \%res;
 }
 
@@ -369,11 +371,9 @@ sub Due {
     my $agreement = $self->Agreement( %args );
     return undef unless $agreement;
 
-    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
-
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
-        my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
+        my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
         $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
     }
     $res += 60 * $agreement->{'RealMinutes'}
@@ -386,12 +386,12 @@ sub Starts {
     my $self = shift;
     my %args = ( Level => undef, Time => undef, @_ );
 
-    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
-    return undef unless $meta;
+    my $agreement = $self->Agreement( %args );
+    return undef unless $agreement;
 
-    return $args{'Time'} if $meta->{'StartImmediately'};
+    return $args{'Time'} if $agreement->{'StartImmediately'};
 
-    my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
+    my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
     return $bhours->first_after( $args{'Time'} );
 }
 
