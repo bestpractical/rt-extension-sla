@@ -347,6 +347,16 @@ sub Agreement {
 
     my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
     return undef unless $meta;
+
+    if ( exists $meta->{'StartImmediately'} || !defined $meta->{'Starts'} ) {
+        $meta->{'Starts'} = {
+            delete $meta->{'StartImmediately'}
+                ? ( )
+                : ( BusinessMinutes => 0 )
+            ,
+        };
+    }
+
     return undef unless $meta->{ $args{'Type'} };
 
     my %res;
@@ -357,10 +367,6 @@ sub Agreement {
     } else {
         $RT::Logger->error("Levels of SLA should be either number or hash ref");
         return undef;
-    }
-
-    if ( defined $meta->{'StartImmediately'} ) {
-        $res{'StartImmediately'} = $meta->{'StartImmediately'};
     }
 
     if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
@@ -393,10 +399,16 @@ sub Due {
 
     my $res = $args{'Time'};
     if ( defined $agreement->{'BusinessMinutes'} ) {
-        $res = $self->CalcBusinessHours(
-            $agreement,
-            add_seconds => $res, 60 * $agreement->{'BusinessMinutes'},
-        );
+        if ( $agreement->{'BusinessMinutes'} ) {
+            $res = $self->CalcBusinessHours(
+                $agreement,
+                add_seconds => $res,
+                60 * $agreement->{'BusinessMinutes'},
+            );
+        }
+        else {
+            $res = $self->CalcBusinessHours( $agreement, first_after => $res );
+        }
     }
     $res += 60 * $agreement->{'RealMinutes'}
         if defined $agreement->{'RealMinutes'};
@@ -406,16 +418,7 @@ sub Due {
 
 sub Starts {
     my $self = shift;
-    my %args = ( Level => undef, Time => undef, @_ );
-
-    my $agreement = $self->Agreement( %args );
-    return undef unless $agreement;
-
-    return $args{'Time'} if $agreement->{'StartImmediately'};
-
-    return $self->CalcBusinessHours(
-        $agreement, first_after => $args{'Time'},
-    );
+    return $self->Due( @_, Type => 'Starts' );
 }
 
 sub GetCustomField {
