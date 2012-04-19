@@ -67,14 +67,14 @@ In this example I<Incident> is the name of the queue, and I<2h> is the name of
 the SLA which will be applied to this queue by default.
 
 Each service level can be described using several options:
-L<StartImmediately|/"StartImmediately (boolean, false)">,
+L<Starts|/"Starts (interval, first business minute)">,
 L<Resolve|/"Resolve and Response (interval, no defaults)">,
 L<Response|/"Resolve and Response (interval, no defaults)">,
 L<KeepInLoop|/"Keep in loop (interval, no defaults)">,
 L<OutOfHours|/"OutOfHours (struct, no default)">
 and L<ServiceBusinessHours|/"Configuring business hours">.
 
-=head2 StartImmediately (boolean, false)
+=head2 Starts (interval, first business minute)
 
 By default when a ticket is created Starts date is set to
 first business minute after time of creation. In other
@@ -84,8 +84,21 @@ be beginning of the next business day.
 
 However, if you provide 24/7 support then you most
 probably would be interested in Starts to be always equal
-to Created time. In this case you can set option
-StartImmediately to a true value.
+to Created time.
+
+Starts option can be used to adjust behaviour. Format
+of the option is the same as format for deadlines which
+described later in details. RealMinutes, BusinessMinutes
+options and OutOfHours modifiers can be used here like
+for any other deadline. For example:
+
+    'standard' => {
+        # give people 15 minutes
+        Starts   => { BusinessMinutes => 15  },
+    },
+
+You can still use old option StartImmediately to set
+Starts date equal to Created date.
 
 Example:
 
@@ -93,9 +106,12 @@ Example:
         StartImmediately => 1,
         Response => { RealMinutes => 30 },
     },
-    'standard' => {
-        StartImmediately => 0, # can be ommited as it's default
-        Response => { BusinessMinutes => 2*60 },
+
+But it's the same as:
+
+    '24/7' => {
+        Starts => { RealMinutes => 0 },
+        Response => { RealMinutes => 30 },
     },
 
 =head2 Resolve and Response (interval, no defaults)
