@@ -342,14 +342,6 @@ sub BusinessHours {
     return $res;
 }
 
-sub CalcBusinessHours {
-    my $self = shift;
-    my $meta = shift;
-    my $method = shift;
-    my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
-    return $bhours->$method( @_ );
-}
-
 sub Agreement {
     my $self = shift;
     my %args = (
@@ -385,15 +377,7 @@ sub Agreement {
         return undef;
     }
 
-    if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
-        if ( $self->CalcBusinessHours( $meta, first_after => $args{'Time'} ) != $args{'Time'} ) {
-            foreach ( qw(RealMinutes BusinessMinutes) ) {
-                next unless $tmp->{ $_ };
-                $res{ $_ } ||= 0;
-                $res{ $_ } += $tmp->{ $_ };
-            }
-        }
-    }
+    $res{'OutOfHours'} = $meta->{'OutOfHours'}{ $args{'Type'} };
 
     $args{'Queue'} ||= $args{'Ticket'}->QueueObj if $args{'Ticket'};
     if ( $args{'Queue'} && ref $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
@@ -408,33 +392,48 @@ sub Agreement {
 
 sub Due {
     my $self = shift;
-    my %args = ( Level => undef, Type => undef, Time => undef, @_ );
+    return $self->CalculateTime( @_ );
+}
 
-    my $agreement = $self->Agreement( %args );
+sub Starts {
+    my $self = shift;
+    return $self->CalculateTime( @_, Type => 'Starts' );
+}
+
+sub CalculateTime {
+    my $self = shift;
+    my %args = (@_);
+    my $agreement = $self->Agreement( @_ );
     return undef unless $agreement;
 
+    local $ENV{'TZ'} = $ENV{'TZ'};
+    $ENV{'TZ'} = $agreement->{'Timezone'} if $agreement->{'Timezone'};
+
+    my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
+
     my $res = $args{'Time'};
+
+    if ( $agreement->{'OutOfHours'} && $bhours->first_after( $res ) != $res ) {
+        foreach ( qw(RealMinutes BusinessMinutes) ) {
+            next unless my $mod = $agreement->{'OutOfHours'}{ $_ };
+            ($agreement->{ $_ } ||= 0) += $mod;
+        }
+    }
+
     if ( defined $agreement->{'BusinessMinutes'} ) {
         if ( $agreement->{'BusinessMinutes'} ) {
-            $res = $self->CalcBusinessHours(
-                $agreement,
-                add_seconds => $res,
-                60 * $agreement->{'BusinessMinutes'},
+            $res = $bhours->add_seconds(
+                $res, 60 * $agreement->{'BusinessMinutes'},
             );
         }
         else {
-            $res = $self->CalcBusinessHours( $agreement, first_after => $res );
+            $res = $bhours->first_after( $res );
         }
     }
     $res += 60 * $agreement->{'RealMinutes'}
         if defined $agreement->{'RealMinutes'};
 
     return $res;
-}
-
-sub Starts {
-    my $self = shift;
-    return $self->Due( @_, Type => 'Starts' );
 }
 
 sub GetCustomField {
@@ -472,7 +471,7 @@ sub GetDefaultServiceLevel {
 
         if ( my $info = $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
             return $info unless ref $info;
-            return $info->{'Level'};
+            return $info->{'Level'} || $RT::ServiceAgreements{'Default'};
         }
     }
     return $RT::ServiceAgreements{'Default'};
