@@ -4,7 +4,7 @@ use warnings;
 
 package RT::Extension::SLA;
 
-our $VERSION = '0.05';
+our $VERSION = '0.05_01';
 
 =head1 NAME
 
