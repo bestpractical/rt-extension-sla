@@ -406,32 +406,42 @@ sub CalculateTime {
     my $agreement = $self->Agreement( @_ );
     return undef unless $agreement;
 
-    local $ENV{'TZ'} = $ENV{'TZ'};
-    $ENV{'TZ'} = $agreement->{'Timezone'} if $agreement->{'Timezone'};
-
-    my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
-
     my $res = $args{'Time'};
 
-    if ( $agreement->{'OutOfHours'} && $bhours->first_after( $res ) != $res ) {
-        foreach ( qw(RealMinutes BusinessMinutes) ) {
-            next unless my $mod = $agreement->{'OutOfHours'}{ $_ };
-            ($agreement->{ $_ } ||= 0) += $mod;
+    my $ok = eval {
+        local $ENV{'TZ'} = $ENV{'TZ'};
+        if ( $agreement->{'Timezone'} && $agreement->{'Timezone'} ne ($ENV{'TZ'}||'') ) {
+            $ENV{'TZ'} = $agreement->{'Timezone'};
+            require POSIX; POSIX::tzset();
         }
-    }
 
-    if ( defined $agreement->{'BusinessMinutes'} ) {
-        if ( $agreement->{'BusinessMinutes'} ) {
-            $res = $bhours->add_seconds(
-                $res, 60 * $agreement->{'BusinessMinutes'},
-            );
+        my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
+
+        if ( $agreement->{'OutOfHours'} && $bhours->first_after( $res ) != $res ) {
+            foreach ( qw(RealMinutes BusinessMinutes) ) {
+                next unless my $mod = $agreement->{'OutOfHours'}{ $_ };
+                ($agreement->{ $_ } ||= 0) += $mod;
+            }
         }
-        else {
-            $res = $bhours->first_after( $res );
+
+        if ( defined $agreement->{'BusinessMinutes'} ) {
+            if ( $agreement->{'BusinessMinutes'} ) {
+                $res = $bhours->add_seconds(
+                    $res, 60 * $agreement->{'BusinessMinutes'},
+                );
+            }
+            else {
+                $res = $bhours->first_after( $res );
+            }
         }
-    }
-    $res += 60 * $agreement->{'RealMinutes'}
-        if defined $agreement->{'RealMinutes'};
+        $res += 60 * $agreement->{'RealMinutes'}
+            if defined $agreement->{'RealMinutes'};
+        1;
+    };
+
+    POSIX::tzset() if $agreement->{'Timezone'}
+        && $agreement->{'Timezone'} ne ($ENV{'TZ'}||'');
+    die $@ unless $ok;
 
     return $res;
 }
