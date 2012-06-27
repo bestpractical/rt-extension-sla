@@ -403,8 +403,8 @@ sub Starts {
 sub CalculateTime {
     my $self = shift;
     my %args = (@_);
-    my $agreement = $self->Agreement( @_ );
-    return undef unless $agreement;
+    my $agreement = $args{'Agreement'} || $self->Agreement( @_ );
+    return undef unless $agreement and ref $agreement eq 'HASH';
 
     my $res = $args{'Time'};
 
