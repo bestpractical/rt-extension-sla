@@ -1,3 +1,12 @@
+0.05_02 Wed Jun 27 15:44:36 PDT 2012
+
+    * Make sure timezone change is seen by system functions
+    * CalculateTime: Optionally accept a provided Agreement
+
+0.05_01 Wed Jun 27 15:38:29 2012 -0700
+
+    * Per-queue timezone support
+
 0.05 Sun Jul 31 04:08:45 MSD 2011
 
     * don't set default SLA for reminders
