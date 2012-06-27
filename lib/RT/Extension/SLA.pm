@@ -4,7 +4,7 @@ use warnings;
 
 package RT::Extension::SLA;
 
-our $VERSION = '0.05';
+our $VERSION = '0.05_01';
 
 =head1 NAME
 
@@ -67,14 +67,14 @@ In this example I<Incident> is the name of the queue, and I<2h> is the name of
 the SLA which will be applied to this queue by default.
 
 Each service level can be described using several options:
-L<StartImmediately|/"StartImmediately (boolean, false)">,
+L<Starts|/"Starts (interval, first business minute)">,
 L<Resolve|/"Resolve and Response (interval, no defaults)">,
 L<Response|/"Resolve and Response (interval, no defaults)">,
 L<KeepInLoop|/"Keep in loop (interval, no defaults)">,
 L<OutOfHours|/"OutOfHours (struct, no default)">
 and L<ServiceBusinessHours|/"Configuring business hours">.
 
-=head2 StartImmediately (boolean, false)
+=head2 Starts (interval, first business minute)
 
 By default when a ticket is created Starts date is set to
 first business minute after time of creation. In other
@@ -84,8 +84,21 @@ be beginning of the next business day.
 
 However, if you provide 24/7 support then you most
 probably would be interested in Starts to be always equal
-to Created time. In this case you can set option
-StartImmediately to a true value.
+to Created time.
+
+Starts option can be used to adjust behaviour. Format
+of the option is the same as format for deadlines which
+described later in details. RealMinutes, BusinessMinutes
+options and OutOfHours modifiers can be used here like
+for any other deadline. For example:
+
+    'standard' => {
+        # give people 15 minutes
+        Starts   => { BusinessMinutes => 15  },
+    },
+
+You can still use old option StartImmediately to set
+Starts date equal to Created date.
 
 Example:
 
@@ -93,9 +106,12 @@ Example:
         StartImmediately => 1,
         Response => { RealMinutes => 30 },
     },
-    'standard' => {
-        StartImmediately => 0, # can be ommited as it's default
-        Response => { BusinessMinutes => 2*60 },
+
+But it's the same as:
+
+    '24/7' => {
+        Starts => { RealMinutes => 0 },
+        Response => { RealMinutes => 30 },
     },
 
 =head2 Resolve and Response (interval, no defaults)
@@ -328,10 +344,27 @@ sub BusinessHours {
 
 sub Agreement {
     my $self = shift;
-    my %args = ( Level => undef, Type => 'Response', Time => undef, @_ );
+    my %args = (
+        Level => undef,
+        Type => 'Response',
+        Time => undef,
+        Ticket => undef,
+        Queue  => undef,
+        @_
+    );
 
     my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
     return undef unless $meta;
+
+    if ( exists $meta->{'StartImmediately'} || !defined $meta->{'Starts'} ) {
+        $meta->{'Starts'} = {
+            delete $meta->{'StartImmediately'}
+                ? ( )
+                : ( BusinessMinutes => 0 )
+            ,
+        };
+    }
+
     return undef unless $meta->{ $args{'Type'} };
 
     my %res;
@@ -344,55 +377,73 @@ sub Agreement {
         return undef;
     }
 
-    if ( defined $meta->{'StartImmediately'} ) {
-        $res{'StartImmediately'} = $meta->{'StartImmediately'};
-    }
+    $res{'OutOfHours'} = $meta->{'OutOfHours'}{ $args{'Type'} };
 
-    if ( $args{'Time'} and my $tmp = $meta->{'OutOfHours'}{ $args{'Type'} } ) {
-        my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
-        if ( $bhours->first_after( $args{'Time'} ) != $args{'Time'} ) {
-            foreach ( qw(RealMinutes BusinessMinutes) ) {
-                next unless $tmp->{ $_ };
-                $res{ $_ } ||= 0;
-                $res{ $_ } += $tmp->{ $_ };
-            }
-        }
+    $args{'Queue'} ||= $args{'Ticket'}->QueueObj if $args{'Ticket'};
+    if ( $args{'Queue'} && ref $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
+        $res{'Timezone'} = $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name }{'Timezone'};
     }
+    $res{'Timezone'} ||= $meta->{'Timezone'} || $RT::Timezone;
+
+    $res{'BusinessHours'} = $meta->{'BusinessHours'};
 
     return \%res;
 }
 
 sub Due {
     my $self = shift;
-    my %args = ( Level => undef, Type => undef, Time => undef, @_ );
-
-    my $agreement = $self->Agreement( %args );
-    return undef unless $agreement;
-
-    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
-
-    my $res = $args{'Time'};
-    if ( defined $agreement->{'BusinessMinutes'} ) {
-        my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
-        $res = $bhours->add_seconds( $res, 60 * $agreement->{'BusinessMinutes'} );
-    }
-    $res += 60 * $agreement->{'RealMinutes'}
-        if defined $agreement->{'RealMinutes'};
-
-    return $res;
+    return $self->CalculateTime( @_ );
 }
 
 sub Starts {
     my $self = shift;
-    my %args = ( Level => undef, Time => undef, @_ );
+    return $self->CalculateTime( @_, Type => 'Starts' );
+}
 
-    my $meta = $RT::ServiceAgreements{'Levels'}{ $args{'Level'} };
-    return undef unless $meta;
+sub CalculateTime {
+    my $self = shift;
+    my %args = (@_);
+    my $agreement = $self->Agreement( @_ );
+    return undef unless $agreement;
 
-    return $args{'Time'} if $meta->{'StartImmediately'};
+    my $res = $args{'Time'};
 
-    my $bhours = $self->BusinessHours( $meta->{'BusinessHours'} );
-    return $bhours->first_after( $args{'Time'} );
+    my $ok = eval {
+        local $ENV{'TZ'} = $ENV{'TZ'};
+        if ( $agreement->{'Timezone'} && $agreement->{'Timezone'} ne ($ENV{'TZ'}||'') ) {
+            $ENV{'TZ'} = $agreement->{'Timezone'};
+            require POSIX; POSIX::tzset();
+        }
+
+        my $bhours = $self->BusinessHours( $agreement->{'BusinessHours'} );
+
+        if ( $agreement->{'OutOfHours'} && $bhours->first_after( $res ) != $res ) {
+            foreach ( qw(RealMinutes BusinessMinutes) ) {
+                next unless my $mod = $agreement->{'OutOfHours'}{ $_ };
+                ($agreement->{ $_ } ||= 0) += $mod;
+            }
+        }
+
+        if ( defined $agreement->{'BusinessMinutes'} ) {
+            if ( $agreement->{'BusinessMinutes'} ) {
+                $res = $bhours->add_seconds(
+                    $res, 60 * $agreement->{'BusinessMinutes'},
+                );
+            }
+            else {
+                $res = $bhours->first_after( $res );
+            }
+        }
+        $res += 60 * $agreement->{'RealMinutes'}
+            if defined $agreement->{'RealMinutes'};
+        1;
+    };
+
+    POSIX::tzset() if $agreement->{'Timezone'}
+        && $agreement->{'Timezone'} ne ($ENV{'TZ'}||'');
+    die $@ unless $ok;
+
+    return $res;
 }
 
 sub GetCustomField {
@@ -427,8 +478,10 @@ sub GetDefaultServiceLevel {
         else {
             return $args{'Queue'}->SLA if $args{'Queue'}->SLA;
         }
-        if ( $RT::ServiceAgreements{'QueueDefault'} && $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
-            return $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name };
+
+        if ( my $info = $RT::ServiceAgreements{'QueueDefault'}{ $args{'Queue'}->Name } ) {
+            return $info unless ref $info;
+            return $info->{'Level'} || $RT::ServiceAgreements{'Default'};
         }
     }
     return $RT::ServiceAgreements{'Default'};

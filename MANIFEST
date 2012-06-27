@@ -33,3 +33,4 @@ t/business_hours.t
 t/due.t
 t/queue.t
 t/starts.t
+t/timezone.t

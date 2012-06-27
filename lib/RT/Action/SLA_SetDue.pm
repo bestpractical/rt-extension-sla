@@ -44,12 +44,14 @@ sub Commit {
     );
 
     my $response_due = $self->Due(
+        Ticket => $ticket,
         Level => $level,
         Type => $is_requestor? 'Response': 'KeepInLoop',
         Time => $last_reply->CreatedObj->Unix,
     );
 
     my $resolve_due = $self->Due(
+        Ticket => $ticket,
         Level => $level,
         Type => 'Resolve',
         Time => $ticket->CreatedObj->Unix,

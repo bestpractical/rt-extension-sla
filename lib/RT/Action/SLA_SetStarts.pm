@@ -34,6 +34,7 @@ sub Commit {
     }
 
     my $starts = $self->Starts(
+        Ticket => $ticket,
         Level => $level,
         Time => $ticket->CreatedObj->Unix,
     );

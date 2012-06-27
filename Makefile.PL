@@ -21,7 +21,7 @@ substitute(
         RT_BIN_PATH  => $bin_path,
         RT_SBIN_PATH => $sbin_path,
     },
-    qw(t/utils.pl),
+    qw(lib/RT/Extension/SLA/Test.pm),
 );
 
 WriteAll();
