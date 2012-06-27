@@ -25,6 +25,10 @@ sub IsApplicable {
         return 1 if $self->TicketObj->FirstCustomFieldValue('SLA');
         return 0;
     }
+    elsif ( $type eq 'Status' || ($type eq 'Set' && $self->TransactionObj->Field eq 'Status') ) {
+        return 1 if $self->TicketObj->FirstCustomFieldValue('SLA');
+        return 0;
+    }
     return 1 if $self->IsCustomFieldChange('SLA');
     return 0;
 }

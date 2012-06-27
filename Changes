@@ -1,3 +1,7 @@
+0.06 Not released
+
+    * IgnoreOnStatuses agreement modifier
+
 0.05_02 Wed Jun 27 15:44:36 PDT 2012
 
     * Make sure timezone change is seen by system functions

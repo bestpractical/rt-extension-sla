@@ -242,7 +242,9 @@ In the above example Due is set to one hour after creation, reply
 of a non-requestor moves Due date two hours forward, requestors'
 replies move Due date to one hour and resolve deadine is 24 hours.
 
-=head2 OutOfHours (struct, no default)
+=head2 Modifying Agreements
+
+=head3 OutOfHours (struct, no default)
 
 Out of hours modifier. Adds more real or business minutes to resolve
 and/or reply options if event happens out of business hours, read also
@@ -265,6 +267,20 @@ hours, otherwise only one.
 
 Supporters have two additional hours in the morning to deal with bunch
 of requests that came into the system during the last night.
+
+=head3 IgnoreOnStatuses (array, no default)
+
+Allows you to ignore a deadline when ticket has certain status. Example:
+
+    'level x' => {
+        KeepInLoop => { BusinessMinutes => 60, IgnoreOnStatuses => ['stalled'] },
+    },
+
+In above example KeepInLoop deadline is ignored if ticket is stalled.
+
+B<NOTE> that if you just open ticket without a reply then Due date will be
+calculated from old action and ticket will probably be overdue. In most
+cases it shouldn't be a problem.
 
 =head2 Configuring business hours
 
@@ -375,6 +391,11 @@ sub Agreement {
     } else {
         $RT::Logger->error("Levels of SLA should be either number or hash ref");
         return undef;
+    }
+
+    if ( $args{'Ticket'} && $res{'IgnoreOnStatuses'} ) {
+        my $status = $args{'Ticket'}->Status;
+        return undef if grep $_ eq $status, @{$res{'IgnoreOnStatuses'}};
     }
 
     $res{'OutOfHours'} = $meta->{'OutOfHours'}{ $args{'Type'} };
