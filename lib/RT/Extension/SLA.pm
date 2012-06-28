@@ -278,9 +278,15 @@ Allows you to ignore a deadline when ticket has certain status. Example:
 
 In above example KeepInLoop deadline is ignored if ticket is stalled.
 
-B<NOTE> that if you just open ticket without a reply then Due date will be
-calculated from old action and ticket will probably be overdue. In most
-cases it shouldn't be a problem.
+B<NOTE>: When a ticket goes from an ignored status to a normal status, the new
+Due date is calculated from the last action (reply, SLA change, etc) which fits
+the SLA type (Response, Starts, KeepInLoop, etc).  This means if a ticket in
+the above example flips from stalled to open without a reply, the ticket will
+probably be overdue.  In most cases this shouldn't be a problem since moving
+out of stalled-like statuses is often the result of RT's auto-open on reply
+scrip, therefore ensuring there's a new reply to calculate Due from.  The
+overall effect is that ignored statuses don't let the Due date drift
+arbitrarily, which could wreak havoc on your SLA performance.
 
 =head2 Configuring business hours
 
