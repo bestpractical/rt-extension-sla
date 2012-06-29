@@ -33,6 +33,7 @@ note 'check that reply to requestors dont unset due date with KeepInLoop';
         ok $id, "created ticket #$id";
         is $ticket->FirstCustomFieldValue('SLA'), '2', 'default sla';
         ok !$ticket->DueObj->Unix, 'no response deadline';
+        $due = 0;
     }
 
     # non-requestor reply
