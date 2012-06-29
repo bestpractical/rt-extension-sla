@@ -1,5 +1,7 @@
 0.06 Fri Jun 29 11:47:50 PDT 2012
 
+    UPGRADING: There are database changes to make, please see the README.
+
     * IgnoreOnStatuses agreement modifier
 
 0.05_02 Wed Jun 27 15:44:36 PDT 2012

@@ -3,6 +3,7 @@ use inc::Module::Install;
 abstract('Service Level Agreements for RT');
 RTx ('RT-Extension-SLA');
 all_from('lib/RT/Extension/SLA.pm');
+readme_from('lib/RT/Extension/SLA.pm');
 license('gpl2');
 
 build_requires('Test::More');
@@ -24,4 +25,5 @@ substitute(
     qw(lib/RT/Extension/SLA/Test.pm),
 );
 
+sign;
 WriteAll();
