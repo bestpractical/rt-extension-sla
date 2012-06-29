@@ -1,3 +1,8 @@
+0.07 Fri Jun 29 15:21:19 PDT 2012
+
+    * Fix accidentally committed local paths in Test.pm
+    * Break out the Test.pm template into Test.pm.in
+
 0.06 Fri Jun 29 11:47:50 PDT 2012
 
     UPGRADING: There are database changes to make, please see the README.
