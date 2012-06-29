@@ -1,5 +1,6 @@
 Changes
 etc/initialdata
+etc/upgrade/0.06/content
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -31,6 +32,7 @@ META.yml
 t/basics.t
 t/business_hours.t
 t/due.t
+t/ignore-on-statuses.t
 t/queue.t
 t/starts.t
 t/timezone.t
