@@ -7,3 +7,4 @@ blib/
 t/tmp/
 *.tar.gz
 MYMETA.*
+/lib/RT/Extension/SLA/Test.pm
