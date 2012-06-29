@@ -35,6 +35,17 @@ to your @Plugins line (or create one) like:
 
 =back
 
+=head1 UPGRADING
+
+=head2 From versions prior to 0.06
+
+You need to run an upgrade step on your RT database so this extension continues
+to work.  Run the following from inside the source of this extension:
+
+    /opt/rt4/sbin/rt-setup-database --action insert --datafile etc/upgrade/0.06/content
+
+It will prompt you for your DBA password and should complete without error.
+
 =head1 CONFIGURATION
 
 Service level agreements of tickets is controlled by an SLA custom field (CF).
