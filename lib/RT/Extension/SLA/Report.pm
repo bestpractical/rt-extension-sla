@@ -108,6 +108,13 @@ sub OnRequestorChange {
     }
 }
 
+sub OnOwnerChange {
+    my $self = shift;
+    my %args = ( Ticket => undef, Transaction => undef, @_);
+
+    $self->State->{'owner'} = $args{'Transaction'}->NewValue;
+}
+
 sub OnServiceLevelChange {
     my $self = shift;
     my %args = ( Transaction => undef, @_);
