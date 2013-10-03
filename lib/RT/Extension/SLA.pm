@@ -494,7 +494,7 @@ sub GetCustomField {
         return RT::CustomField->new( $RT::SystemUser );
     }
     my $cfs = $args{'Ticket'}->QueueObj->TicketCustomFields;
-    $cfs->Limit( FIELD => 'Name', VALUE => $args{'CustomField'} );
+    $cfs->Limit( FIELD => 'Name', VALUE => $args{'CustomField'}, CASESENSITIVE => 0 );
     return $cfs->First || RT::CustomField->new( $RT::SystemUser );
 }
 

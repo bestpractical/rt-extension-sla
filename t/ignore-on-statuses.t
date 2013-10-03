@@ -72,12 +72,13 @@ note 'check that reply to requestors dont unset due date with KeepInLoop';
         $ticket->Load( $id );
         ok $ticket->id, "loaded ticket #$id";
         $ticket->Correspond( Content => 'we are still working on this.' );
+        $ticket->SetStatus('open');
 
         $ticket = RT::Ticket->new( $root );
         $ticket->Load( $id );
         ok $ticket->id, "loaded ticket #$id";
 
-        is $ticket->Status, 'open', 'ticket was auto-opened';
+        is $ticket->Status, 'open', 'ticket was opened';
 
         my $tmp = $ticket->DueObj->Unix;
         ok $tmp > 0, 'Due date is set';
@@ -139,12 +140,13 @@ note 'Check that failing to reply to the requestors is not ignored';
         $ticket->Load( $id );
         ok $ticket->id, "loaded ticket #$id";
         $ticket->Correspond( Content => 'we are still working on this.' );
+        $ticket->SetStatus('open');
 
         $ticket = RT::Ticket->new( $root );
         $ticket->Load( $id );
         ok $ticket->id, "loaded ticket #$id";
 
-        is $ticket->Status, 'open', 'ticket was auto-opened';
+        is $ticket->Status, 'open', 'ticket was opened';
 
         my $tmp = $ticket->DueObj->Unix;
         ok $tmp > 0, 'Due date is set';
