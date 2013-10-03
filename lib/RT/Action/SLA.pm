@@ -41,6 +41,7 @@ sub SetDateField {
     $date->Set( Format => 'unix', Value => $value );
 
     $method = 'Set'. $type;
+    return 1 if $ticket->$type eq $date->ISO;
     my ($status, $msg) = $ticket->$method( $date->ISO );
     unless ( $status ) {
         $RT::Logger->error("Couldn't set $type date: $msg");
