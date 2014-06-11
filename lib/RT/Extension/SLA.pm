@@ -185,20 +185,20 @@ so several rules applies to make things sane:
 
 =over 4
 
-=item
+=item *
 
 If requestor(s) reply multiple times and are ignored then the deadline
 is calculated using the oldest requestors' correspondence.
 
-=item
+=item *
 
 If a ticket has no requestor(s) then it has no response deadline.
 
-=item
+=item *
 
 If a ticket is created by non-requestor then due date is left unset.
 
-=item
+=item *
 
 If owner of a ticket is its requestor then his actions are treated
 as non-requestors'.
@@ -279,7 +279,7 @@ and/or reply options if event happens out of business hours, read also
 </"Configuring business hours"> below.
 
 Example:
-    
+
     'level x' => {
         OutOfHours => { Resolve => { RealMinutes => +60*24 } },
         Resolve    => { RealMinutes => 60*24 },
