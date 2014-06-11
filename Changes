@@ -1,3 +1,8 @@
+0.08 Wed Jun 11 16:30:17 EDT 2014
+
+    * Compatibility with RT 4.2
+    * Skip setting date if it is already the current value
+
 0.07 Fri Jun 29 15:21:19 PDT 2012
 
     * Fix accidentally committed local paths in Test.pm

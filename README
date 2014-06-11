@@ -4,16 +4,33 @@ NAME
 DESCRIPTION
     RT extension to implement automated due dates using service levels.
 
-INSTALL
-    perl Makefile.PL
-    make
-    make install
-    make initdb (for the first time only)
-    Base configuration
-        In RT 3.8 and later, you must enable the plugin by adding
-        RT::Extension::SLA to your @Plugins line (or create one) like:
+INSTALLATION
+    "perl Makefile.PL"
+    "make"
+    "make install"
+        May need root permissions
 
-            Set(@Plugins,(qw(RT::Extension::SLA)));
+    "make initdb"
+        Only run this the first time you install this module.
+
+        If you run this twice, you may end up with duplicate data in your
+        database.
+
+        If you are upgrading this module, check for upgrading instructions
+        in case changes need to be made to your database.
+
+    Edit your /opt/rt4/etc/RT_SiteConfig.pm
+        If you are using RT 4.2 or greater, add this line:
+
+            Plugin('RT::Extension::SLA');
+
+        For RT 3.8 and 4.0, add this line:
+
+            Set(@Plugins, qw(RT::Extension::SLA));
+
+        or add "RT::Extension::SLA" to your existing @Plugins line.
+
+    Restart your webserver
 
 UPGRADING
   From versions prior to 0.06
@@ -342,7 +359,7 @@ AUTHOR
     Ruslan Zakirov <ruz@bestpractical.com>
 
 COPYRIGHT
-    This extension is Copyright (C) 2007-2009 Best Practical Solutions, LLC.
+    This extension is Copyright (C) 2007-2014 Best Practical Solutions, LLC.
 
     It is freely redistributable under the terms of version 2 of the GNU
     GPL.
