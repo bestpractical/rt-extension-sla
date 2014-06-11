@@ -582,7 +582,7 @@ Ruslan Zakirov E<lt>ruz@bestpractical.comE<gt>
 
 =head1 COPYRIGHT
 
-This extension is Copyright (C) 2007-2009 Best Practical Solutions, LLC.
+This extension is Copyright (C) 2007-2014 Best Practical Solutions, LLC.
 
 It is freely redistributable under the terms of version 2 of the GNU GPL.
 
