@@ -14,24 +14,41 @@ RT::Extension::SLA - Service Level Agreements for RT
 
 RT extension to implement automated due dates using service levels.
 
-=head1 INSTALL
+=head1 INSTALLATION
 
-=over 4
+=over
 
-=item perl Makefile.PL
+=item C<perl Makefile.PL>
 
-=item make
+=item C<make>
 
-=item make install
+=item C<make install>
 
-=item make initdb (for the first time only)
+May need root permissions
 
-=item Base configuration
+=item C<make initdb>
 
-In RT 3.8 and later, you must enable the plugin by adding RT::Extension::SLA
-to your @Plugins line (or create one) like:
+Only run this the first time you install this module.
 
-    Set(@Plugins,(qw(RT::Extension::SLA)));
+If you run this twice, you may end up with duplicate data
+in your database.
+
+If you are upgrading this module, check for upgrading instructions
+in case changes need to be made to your database.
+
+=item Edit your F</opt/rt4/etc/RT_SiteConfig.pm>
+
+If you are using RT 4.2 or greater, add this line:
+
+    Plugin('RT::Extension::SLA');
+
+For RT 3.8 and 4.0, add this line:
+
+    Set(@Plugins, qw(RT::Extension::SLA));
+
+or add C<RT::Extension::SLA> to your existing C<@Plugins> line.
+
+=item Restart your webserver
 
 =back
 
