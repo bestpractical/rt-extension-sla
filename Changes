@@ -1,46 +1,35 @@
-0.08 Wed Jun 11 16:30:17 EDT 2014
+0.08 2014-06-11
+ - Compatibility with RT 4.2
+ - Skip setting date if it is already the current value
 
-    * Compatibility with RT 4.2
-    * Skip setting date if it is already the current value
+0.07 2012-06-29
+ - Fix accidentally committed local paths in Test.pm
+ - Break out the Test.pm template into Test.pm.in
 
-0.07 Fri Jun 29 15:21:19 PDT 2012
+0.06 2012-06-29
+ - UPGRADING: There are database changes to make, please see the README.
+ - IgnoreOnStatuses agreement modifier
 
-    * Fix accidentally committed local paths in Test.pm
-    * Break out the Test.pm template into Test.pm.in
+0.05_02 2012-06-27
+ - Make sure timezone change is seen by system functions
+ - CalculateTime: Optionally accept a provided Agreement
 
-0.06 Fri Jun 29 11:47:50 PDT 2012
+0.05_01 2012-06-27
+ - Per-queue timezone support
 
-    UPGRADING: There are database changes to make, please see the README.
+0.05 2011-07-31
+ - don't set default SLA for reminders
+ - switch over RT::Test in tests
 
-    * IgnoreOnStatuses agreement modifier
+0.04 2011-06-03
+ - RT 4.0 compatibility fix
 
-0.05_02 Wed Jun 27 15:44:36 PDT 2012
+0.03 2009-04-20
+ - Add KeepInLoop option
 
-    * Make sure timezone change is seen by system functions
-    * CalculateTime: Optionally accept a provided Agreement
+0.02 2008-05-06
+ - POD cleanup
 
-0.05_01 Wed Jun 27 15:38:29 2012 -0700
-
-    * Per-queue timezone support
-
-0.05 Sun Jul 31 04:08:45 MSD 2011
-
-    * don't set default SLA for reminders
-    * switch over RT::Test in tests
-
-0.04 Fri Jun  3 02:02:15 MSD 2011
-
-    * RT 4.0 compatibility fix
-
-0.03 Mon Apr 20 23:25:03 +0400 2009
-
-    * Add KeepInLoop option
-
-0.02 Thu May 06 04:07:00 +0400 2008
-
-    * POD cleanup
-
-0.01 Thu Feb 14 11:17:00 +0400 2008
-
-    * initial release
+0.01 2008-02-14
+ - initial release
 
