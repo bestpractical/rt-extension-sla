@@ -1,6 +1,8 @@
 #line 1
 package Module::Install::RTx::Runtime;
-use Module::Install::Base; @ISA = qw(Module::Install::Base);
+
+use base 'Exporter';
+our @EXPORT = qw/RTxDatabase RTxPlugin/;
 
 use strict;
 use File::Basename ();
@@ -22,9 +24,9 @@ EOT
 }
 
 sub RTxDatabase {
-    my ($self, $action, $name, $version) = @_;
+    my ($action, $name, $version) = @_;
 
-    $self->_rt_runtime_load;
+    _rt_runtime_load();
 
     require RT::System;
     my $has_upgrade = RT::System->can('AddUpgradeHistory');
@@ -54,9 +56,9 @@ sub RTxDatabase {
 }
 
 sub RTxPlugin {
-    my ($self, $name) = @_;
+    my ($name) = @_;
 
-    $self->_rt_runtime_load;
+    _rt_runtime_load();
     require YAML::Tiny;
     my $data = YAML::Tiny::LoadFile('META.yml');
     my $name = $data->{name};
