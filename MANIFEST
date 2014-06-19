@@ -12,10 +12,12 @@ inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/ReadmeFromPod.pm
 inc/Module/Install/RTx.pm
-inc/Module/Install/RTx/Factory.pm
+inc/Module/Install/RTx/Runtime.pm
 inc/Module/Install/Substitute.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
+inc/unicore/Name.pm
+inc/YAML/Tiny.pm
 lib/RT/Action/SLA.pm
 lib/RT/Action/SLA_SetDefault.pm
 lib/RT/Action/SLA_SetDue.pm

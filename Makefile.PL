@@ -2,9 +2,11 @@ use inc::Module::Install;
 
 abstract('Service Level Agreements for RT');
 RTx ('RT-Extension-SLA');
-all_from('lib/RT/Extension/SLA.pm');
 readme_from('lib/RT/Extension/SLA.pm');
 license('gpl2');
+
+requires_rt '4.0.0';
+rt_too_new '4.4.0';
 
 build_requires('Test::More');
 
