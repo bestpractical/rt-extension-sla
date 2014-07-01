@@ -8,7 +8,7 @@ no warnings 'once';
 
 use Module::Install::Base;
 use base 'Module::Install::Base';
-our $VERSION = '0.34_03';
+our $VERSION = '0.34_04';
 
 use FindBin;
 use File::Glob     ();
@@ -30,6 +30,8 @@ sub RTx {
         unless $self->version;
     $self->abstract("$name Extension")
         unless $self->abstract;
+    $self->readme_from( "lib/$fname.pm",
+                        { options => [ quotes => "none" ] } );
     $self->add_metadata("x_module_install_rtx_version", $VERSION );
 
     # Try to find RT.pm
@@ -248,4 +250,4 @@ sub _load_rt_handle {
 
 __END__
 
-#line 367
+#line 369
