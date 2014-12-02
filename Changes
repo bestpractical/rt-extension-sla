@@ -1,3 +1,7 @@
+1.02 2014-12-02
+ - Reduce severity of "no SLA CF applied to this ticket" logging to
+   debug, as it is a valid configuration.
+
 1.01 2014-07-01
  - Documentation and packaging updates; no code changes
 
