@@ -25,7 +25,7 @@ sub IsCustomFieldChange {
 
     my $cf = $self->GetCustomField( CustomField => $cf_name );
     unless ( $cf->id ) {
-        $RT::Logger->error("Custom field '$cf_name' is not applied to ticket #". $self->TicketObj->id);
+        $RT::Logger->debug("Custom field '$cf_name' is not applied to ticket #". $self->TicketObj->id);
         return 0;
     }
     return 0 unless $cf->id == $txn->Field;
