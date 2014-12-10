@@ -1,3 +1,7 @@
+1.03 2014-12-10
+ - Add a configuration option, AssumeOutsideActor, which causes the
+   Response SLA to assume only replies from Owner and AdminCCs meet SLA
+
 1.02 2014-12-02
  - Reduce severity of "no SLA CF applied to this ticket" logging to
    debug, as it is a valid configuration.
