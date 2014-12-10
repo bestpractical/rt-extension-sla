@@ -167,43 +167,33 @@ Example:
 
 =head3 Response
 
-In many companies providing support service(s) resolve time
-of a ticket is less important than time of response to requestors
-from stuff members.
+In many companies providing support service(s) resolve time of a ticket
+is less important than time of response to requestors from staff
+members.
 
-You can use Response option to define such deadlines. When you're
-using this option Due time "flips" when requestors and non-requestors
-reply to a ticket. We set Due date when a ticket is created, unset
-when non-requestor replies... until ticket is closed when ticket's
-Due date is also unset.
+You can use Response option to define such deadlines.  The Due date is
+set when a ticket is created, unset when a worker replies, and re-set
+when the requestor replies again -- until the ticket is closed, when the
+ticket's Due date is unset.
 
-B<NOTE> that behaviour changes when Resolve and Response options
-are combined, read L<below|/"Using both Resolve and Response in the same level">.
+B<NOTE> that this behaviour changes when Resolve and Response options
+are combined; see L</"Using both Resolve and Response in the same
+level">.
 
-As response deadlines are calculated using requestors' activity
-so several rules applies to make things sane:
+Note that by default, only the requestors on the ticket are considered
+"outside actors" and thus require a Response due date; all other email
+addresses are treated as workers of the ticket, and thus count as
+meeting the SLA.  If you'd like to invert this logic, so that the Owner
+and AdminCcs are the only worker email addresses, and all others are
+external, see the L</AssumeOutsideActor> configuration.
 
-=over 4
+The owner is never treated as an outside actor; if they are also the
+requestor of the ticket, it will have no SLA.
 
-=item *
+If an outside actor replies multiple times, their later replies are
+ignored; the deadline is awlways calculated from the oldest
+correspondence from the outside actor.
 
-If requestor(s) reply multiple times and are ignored then the deadline
-is calculated using the oldest requestors' correspondence.
-
-=item *
-
-If a ticket has no requestor(s) then it has no response deadline.
-
-=item *
-
-If a ticket is created by non-requestor then due date is left unset.
-
-=item *
-
-If owner of a ticket is its requestor then his actions are treated
-as non-requestors'.
-
-=back
 
 =head3 Using both Resolve and Response in the same level
 
@@ -213,7 +203,7 @@ according to the earliest of two deadlines and never is dropped to
 
 If a ticket met its Resolve deadline then due date stops "flipping",
 is freezed and the ticket becomes overdue. Before that moment when
-non-requestor replies to a ticket, due date is changed to Resolve
+an inside actor replies to a ticket, due date is changed to Resolve
 deadline instead of 'Not Set', as well this happens when a ticket
 is closed. So all the time due date is defined.
 
@@ -267,7 +257,7 @@ every few hours. KeepInLoop option can be used to achieve this.
     },
 
 In the above example Due is set to one hour after creation, reply
-of a non-requestor moves Due date two hours forward, requestors'
+of a inside actor moves Due date two hours forward, outside actors'
 replies move Due date to one hour and resolve deadine is 24 hours.
 
 =head2 Modifying Agreements
@@ -365,6 +355,20 @@ In the config you can set per queue defaults, using:
             'queue name' => 'default value for this queue',
             ...
         },
+        ...
+    };
+
+=head2 AssumeOutsideActor
+
+When using a L<Response|/"Resolve and Response (interval, no defaults)">
+configuration, the due date is unset when anyone who is not a requestor
+replies.  If it is common for non-requestors to reply to tickets, and
+this should I<not> satisfy the SLA, you may wish to set
+C<AssumeOutsideActor>.  This causes the extension to assume that the
+Response SLA has only been met when the owner or AdminCc reply.
+
+    %RT::ServiceAgreements = (
+        AssumeOutsideActor => 1,
         ...
     };
 
@@ -551,6 +555,9 @@ sub GetDefaultServiceLevel {
       something like 8/5+4/2 for different tickets(by requestor, queue or
       something else). So people would be able to handle tickets in the right
       order using Due dates.
+
+    * [not implemented] tests for AssumeOutsideActor - need tests for all of the
+      conditionals in RT::Action::SLA_SetDue::IsOutsideActor
 
     * [not implemented] WebUI
 

@@ -37,16 +37,16 @@ sub Commit {
     my $txn = $self->TransactionObj;
     my $level = $ticket->FirstCustomFieldValue('SLA');
 
-    my ($last_reply, $is_requestor) = $self->LastEffectiveAct;
+    my ($last_reply, $is_outside) = $self->LastEffectiveAct;
     $RT::Logger->debug(
-        'Last effective '. ($is_requestor? '':'non-') .'requestors\' reply'
+        'Last effective '. ($is_outside? '':'non-') .'outside actors\' reply'
         .' to ticket #'. $ticket->id .' is txn #'. $last_reply->id
     );
 
     my $response_due = $self->Due(
         Ticket => $ticket,
         Level => $level,
-        Type => $is_requestor? 'Response': 'KeepInLoop',
+        Type => $is_outside? 'Response' : 'KeepInLoop',
         Time => $last_reply->CreatedObj->Unix,
     );
 
@@ -65,16 +65,26 @@ sub Commit {
     return $self->SetDateField( Due => $due );
 }
 
-sub IsRequestorsAct {
+sub IsOutsideActor {
     my $self = shift;
     my $txn = shift || $self->TransactionObj;
 
     my $actor = $txn->CreatorObj->PrincipalObj;
 
-    # owner is always treated as non-requestor
+    # owner is always treated as inside actor
     return 0 if $actor->id == $self->TicketObj->Owner;
 
-    return $self->TicketObj->Requestors->HasMemberRecursively( $actor )? 1 : 0;
+    if ( $RT::ServiceAgreements{'AssumeOutsideActor'} ) {
+        # All non-admincc users are outside actors
+        return 0 if $self->TicketObj          ->AdminCc->HasMemberRecursively( $actor )
+                 or $self->TicketObj->QueueObj->AdminCc->HasMemberRecursively( $actor );
+
+        return 1;
+    } else {
+        # Only requestors are outside actors
+        return 1 if $self->TicketObj->Requestors->HasMemberRecursively( $actor );
+        return 0;
+    }
 }
 
 sub LastEffectiveAct {
@@ -90,13 +100,13 @@ sub LastEffectiveAct {
 
     my $res;
     while ( my $txn = $txns->Next ) {
-        unless ( $self->IsRequestorsAct( $txn ) ) {
+        unless ( $self->IsOutsideActor( $txn ) ) {
             last if $res;
             return ($txn);
         }
         $res = $txn;
     }
-    return ($res, 'requestor');
+    return ($res, 1);
 }
 
 1;
