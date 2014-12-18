@@ -13,6 +13,8 @@ build_requires('Test::More');
 requires('Business::Hours');
 auto_install();
 
+no_index package => 'RT::Queue';
+
 my ($lp) = ($INC{'RT.pm'} =~ /^(.*)[\\\/]/);
 my $lib_path = join( ' ', "$RT::LocalPath/lib", $lp );
 my $sbin_path = $RT::SbinPath || "$RT::BasePath/sbin" || "/opt/rt3/sbin";

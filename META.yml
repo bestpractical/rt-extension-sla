@@ -20,6 +20,8 @@ no_index:
     - etc
     - inc
     - t
+  package:
+    - RT::Queue
 requires:
   Business::Hours: 0
   perl: 5.8.3
