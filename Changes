@@ -1,3 +1,6 @@
+1.04 2014-12-18
+ - Add no_index for core RT packages
+
 1.03 2014-12-10
  - Add a configuration option, AssumeOutsideActor, which causes the
    Response SLA to assume only replies from Owner and AdminCCs meet SLA

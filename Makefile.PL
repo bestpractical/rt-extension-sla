@@ -1,8 +1,6 @@
 use inc::Module::Install;
 
-abstract('Service Level Agreements for RT');
 RTx ('RT-Extension-SLA');
-license('gpl2');
 repository('https://github.com/bestpractical/rt-extension-sla');
 
 requires_rt '4.0.0';
