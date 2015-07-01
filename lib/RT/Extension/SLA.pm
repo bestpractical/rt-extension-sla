@@ -305,6 +305,18 @@ out of stalled-like statuses is often the result of RT's auto-open on reply
 scrip, therefore ensuring there's a new reply to calculate Due from.  The
 overall effect is that ignored statuses don't let the Due date drift
 arbitrarily, which could wreak havoc on your SLA performance.
+The option C<RecalculateDueOnIgnoredStatusChange> could get around the
+"probably be overdue" issue by considering the last ignored status date too.
+e.g.
+
+    'level x' => {
+        KeepInLoop => {
+            BusinessMinutes => 60,
+            RecalculateDueOnIgnoredStatusChange => 1,
+            IgnoreOnStatuses => ['stalled'],
+        },
+    },
+
 
 =head2 Configuring business hours
 
