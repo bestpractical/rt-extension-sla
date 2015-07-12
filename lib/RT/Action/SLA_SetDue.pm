@@ -43,16 +43,6 @@ sub Commit {
         .' to ticket #'. $ticket->id .' is txn #'. $last_reply->id
     );
 
-    my $meta =
-        $RT::ServiceAgreements{ 'Levels' }{ $level }
-      ? $RT::ServiceAgreements{ 'Levels' }{ $level }{ $is_outside ? 'Response' : 'KeepInLoop' }
-      : undef;
-    if ( $meta && $meta->{IgnoreOnStatuses} && $meta->{RecalculateDueOnIgnoredStatusChange} ) {
-        my $last_ignored_status_txn = $self->LastIgnoredStatusAct(@{$meta->{IgnoreOnStatuses}});
-        $last_reply = $last_ignored_status_txn
-          if $last_ignored_status_txn && $last_reply->Created lt $last_ignored_status_txn->Created;
-    }
-
     my $response_due = $self->Due(
         Ticket => $ticket,
         Level => $level,
@@ -117,19 +107,6 @@ sub LastEffectiveAct {
         $res = $txn;
     }
     return ($res, 1);
-}
-
-sub LastIgnoredStatusAct {
-    my $self = shift;
-    my @statuses = @_;
-    my $txns = $self->TicketObj->Transactions;
-    $txns->Limit( FIELD => 'FIELD', VALUE => 'Status' );
-    $txns->Limit( FIELD => 'OldValue', OPERATOR => 'IN', VALUE => \@statuses );
-    $txns->OrderByCols(
-        { FIELD => 'Created', ORDER => 'DESC' },
-        { FIELD => 'id', ORDER => 'DESC' },
-    );
-    return $txns->First;
 }
 
 1;
