@@ -305,6 +305,16 @@ out of stalled-like statuses is often the result of RT's auto-open on reply
 scrip, therefore ensuring there's a new reply to calculate Due from.  The
 overall effect is that ignored statuses don't let the Due date drift
 arbitrarily, which could wreak havoc on your SLA performance.
+ExcludeTimeOnIgnoredStatuses option could get around the "probably be
+overdue" issue by excluding the time spent on ignored statuses.
+
+        'level x' => {
+            KeepInLoop => {
+                BusinessMinutes => 60,
+                ExcludeTimeOnIgnoredStatuses => 1,
+                IgnoreOnStatuses => ['stalled'],
+            },
+        },
 
 =head2 Configuring business hours
 
@@ -480,6 +490,52 @@ sub CalculateTime {
             foreach ( qw(RealMinutes BusinessMinutes) ) {
                 next unless my $mod = $agreement->{'OutOfHours'}{ $_ };
                 ($agreement->{ $_ } ||= 0) += $mod;
+            }
+        }
+
+        if (   $args{ Ticket }
+            && $agreement->{ IgnoreOnStatuses }
+            && $agreement->{ ExcludeTimeOnIgnoredStatuses } )
+        {
+            my $txns = RT::Transactions->new( RT->SystemUser );
+            $txns->LimitToTicket($args{Ticket}->id);
+            $txns->Limit(
+                FIELD => 'Field',
+                VALUE => 'Status',
+            );
+            my $date = RT::Date->new( RT->SystemUser );
+            $date->Set( Value => $args{ Time } );
+            $txns->Limit(
+                FIELD    => 'Created',
+                OPERATOR => '>=',
+                VALUE    => $date->ISO( Timezone => 'UTC' ),
+            );
+
+            my $last_time = $args{ Time };
+            while ( my $txn = $txns->Next ) {
+                if ( grep( { $txn->OldValue eq $_ } @{ $agreement->{ IgnoreOnStatuses } } ) ) {
+                    if ( !grep( { $txn->NewValue eq $_ } @{ $agreement->{ IgnoreOnStatuses } } ) ) {
+                        if ( defined $agreement->{ 'BusinessMinutes' } ) {
+
+                            # re-init $bhours to make sure we don't have a cached start/end,
+                            # so the time here is not outside the calculated business hours
+
+                            my $bhours = $self->BusinessHours( $agreement->{ 'BusinessHours' } );
+                            my $time = $bhours->between( $last_time, $txn->CreatedObj->Unix );
+                            if ( $time > 0 ) {
+                                $res = $bhours->add_seconds( $res, $time );
+                            }
+                        }
+                        else {
+                            my $time = $txn->CreatedObj->Unix - $last_time;
+                            $res += $time;
+                        }
+                        $last_time = $txn->CreatedObj->Unix;
+                    }
+                }
+                else {
+                    $last_time = $txn->CreatedObj->Unix;
+                }
             }
         }
 

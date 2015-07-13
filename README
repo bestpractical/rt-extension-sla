@@ -263,7 +263,17 @@ CONFIGURATION
     result of RT's auto-open on reply scrip, therefore ensuring there's a
     new reply to calculate Due from. The overall effect is that ignored
     statuses don't let the Due date drift arbitrarily, which could wreak
-    havoc on your SLA performance.
+    havoc on your SLA performance. ExcludeTimeOnIgnoredStatuses option could
+    get around the "probably be overdue" issue by excluding the time spent
+    on ignored statuses.
+
+            'level x' => {
+                KeepInLoop => {
+                    BusinessMinutes => 60,
+                    ExcludeTimeOnIgnoredStatuses => 1,
+                    IgnoreOnStatuses => ['stalled'],
+                },
+            },
 
   Configuring business hours
     In the config you can set one or more work schedules. Use the following
